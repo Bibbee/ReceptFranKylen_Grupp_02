@@ -1,16 +1,10 @@
 from bottle import route, run, template, request, static_file 
 import requests
 
-<<<<<<< Updated upstream
+
 API_KEY = '479dd170c8464b06bc4d46f58ae6cdf7' # 1. fyll i din unika API-nyckel här. 
-=======
-<<<<<<< HEAD
 API_KEY = '479dd170c8464b06bc4d46f58ae6cdf7' 
             # 1. fyll i din unika API-nyckel här. 
-=======
-API_KEY = '479dd170c8464b06bc4d46f58ae6cdf7' # 1. fyll i din unika API-nyckel här. 
->>>>>>> d0009ca89adc5128dae4de3b7dac3fa474e0618e
->>>>>>> Stashed changes
              # 2. Skaffa gratis nyckel genom att skapa ett konto på:
              # 3. https://spoonacular.com/food-api
              # 4. gör inte för många anrop, du har ca 150pts/dag (gratisplan)
