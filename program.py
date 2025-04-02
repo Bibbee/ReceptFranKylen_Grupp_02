@@ -34,7 +34,7 @@ def get_recipes():
     response = requests.get(url, params=params)
     recipes = response.json() if response.status_code == 200 else []
     return template('index', recipes=recipes)
-
+    
 @route('/static/<filename>')
 def serve_static(filename):
     return static_file(filename, root='./static')
