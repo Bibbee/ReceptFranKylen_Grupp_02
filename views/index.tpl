@@ -8,12 +8,12 @@
 
     <nav class="navbar">
         <ul>
-            <li><a href="/">🏠 Hem</a></li>
-            <li><a href="/saved">💾 Sparade recept</a></li>
-            <li><a href="/shoppinglist">🛒 Inköpslista</a></li>
-            <li><a href="/filter">🔍 Filtrera</a></li>
-            <li><a href="/login">🔐 Logga in</a></li>
-            <li><a href="javascript:history.back()">🔙 Tillbaka</a></li>
+            <li><a href="/">Hem</a></li>
+            <li><a href="/saved">Sparade recept</a></li>
+            <li><a href="/shoppinglist">Inköpslista</a></li>
+            <li><a href="/filter">Filtrera</a></li>
+            <li><a href="/login">Logga in</a></li>
+            <li><a href="javascript:history.back()">Tillbaka</a></li>
         </ul>
     </nav>
 
@@ -25,13 +25,15 @@
 
     % if recipes:
         <h2>Resultat:</h2>
-        % for recipe in recipes:
-            <div class="recipe">
-                <img src="{{recipe['image']}}" width="100">
-                <p><strong>{{recipe['title']}}</strong></p>
-                <a href="https://spoonacular.com/recipes/{{recipe['title'].replace(' ', '-')}}-{{recipe['id']}}" target="_blank">Visa recept</a>
-            </div>
-        % end
+        <div class="recipe-container">
+            % for recipe in recipes:
+                <div class="recipe">
+                    <img src="{{recipe['image']}}" width="100">
+                    <p><strong>{{recipe['title']}}</strong></p>
+                    <a href="https://spoonacular.com/recipes/{{recipe['title'].replace(' ', '-')}}-{{recipe['id']}}" target="_blank">Visa recept</a>
+                </div>
+            % end
+        </div>  
     % end
 </body>  
 </html> 
