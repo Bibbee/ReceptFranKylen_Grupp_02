@@ -39,4 +39,4 @@ def get_recipes():
 def serve_static(filename):
     return static_file(filename, root='./static')
 
-run(host='localhost', port=8080, debug=True)
+run(host='localhost', port=8080, debug=True)  

@@ -7,7 +7,7 @@
 <body>
     <h1>Skriv in ingredienser</h1>
     <form action="/" method="post">
-        <input type="text" name="ingredients" placeholder="t.ex. tomat, ost, pasta" required>
+        <input type="text" name="ingredients" placeholder="t.ex. tomato, cheese, pasta" required>
         <button type="submit">Hitta recept</button>
     </form>
 
@@ -21,5 +21,5 @@
             </div>
         % end
     % end
-</body>
+</body>  
 </html> 
