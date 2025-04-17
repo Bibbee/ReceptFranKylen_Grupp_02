@@ -35,8 +35,9 @@ def get_recipes():
     recipes = response.json() if response.status_code == 200 else []
     return template('index', recipes=recipes)
     
-@route('/static/<filename>')
-def serve_static(filename):
-    return static_file(filename, root='./static')
+@route('/static/<filepath:path>')
+def serve_static(filepath):
+    return static_file(filepath, root='./static')
+
 
 run(host='localhost', port=8080, debug=True)  
