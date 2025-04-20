@@ -1,0 +1,61 @@
+/* GLOBAL */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: bisque;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  /* TOP BAR */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 10px; /* Minska horisontellt utrymme */
+    background-color: transparent; /* Gör bakgrunden genomskinlig */
+    box-shadow: none;
+    z-index: 10;
+  }
+  .top-bar .home-icon img {
+    max-width: 80px;
+    height: auto;
+    display: block;
+    transition: transform 0.2s;
+  }
+  .top-bar .home-icon img:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+  }
+  .top-bar .top-right-icons {
+    display: flex;
+    gap: 20px;
+  }
+  .top-bar .top-right-icons a {
+    font-size: 24px;
+    color: black;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .top-bar .top-right-icons a:hover {
+    color: #f48c06;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 1rem;
+  }
+  
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+  
+  .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+  
