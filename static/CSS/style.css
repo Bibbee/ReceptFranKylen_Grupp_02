@@ -121,6 +121,26 @@ body {
   .card .btn-warning:hover {
     background-color: #e07b00;
   }
+
+  .favorite-star {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    width: 2.2rem;
+    height: 2.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: gold;
+    transition: transform 0.1s ease;
+  }
+  
+  .favorite-star:hover {
+    transform: scale(1.2);
+  }
   
   /* RESPONSIVE */
   @media (max-width: 900px) {
