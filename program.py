@@ -101,26 +101,43 @@ def register():
         password = request.forms.get('password', '')
 
         # Enforce minimum password length
-        if len(password) < 8:
-            error = 'Password must be at least 8 characters long.'
+        if request.method == 'POST':
+            username = request.forms.get('username', '').strip()
+            email    = request.forms.get('email', '').strip().lower()
+            password = request.forms.get('password', '')
+
+        # Enkel e‑postvalidering
+        if not email or '@' not in email:
+            error = 'Ogiltig e‑postadress.'
+        elif len(password) < 8:
+            error = 'Lösenord måste vara minst 8 tecken.'
         else:
             pw_hash = bcrypt.hashpw(
-                password.encode('utf-8'), bcrypt.gensalt()
+                password.encode('utf-8'),
+                bcrypt.gensalt()
             ).decode('utf-8')
 
             try:
                 with get_db_connection() as conn:
                     with conn.cursor() as cur:
                         cur.execute(
-                            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-                            (username, pw_hash)
+                            """
+                            INSERT INTO users (username, email, password_hash)
+                            VALUES (%s, %s, %s)
+                            """,
+                            (username, email, pw_hash)
                         )
                         conn.commit()
-                        success = 'Registration successful! You can now log in.'
-            except errors.UniqueViolation:
-                error = 'Username is already taken.'
+                        success = 'Registrering lyckades! Du kan nu logga in.'
+            except errors.UniqueViolation as e:
+                # Avgör om det är username eller email som krockar
+                constraint = e.diag.constraint_name or ''
+                if 'email' in constraint:
+                    error = 'E‑postadressen är redan registrerad.'
+                else:
+                    error = 'Användarnamnet är upptaget.'
             except Exception as exc:
-                error = f'Registration error: {exc}'
+                error = f'Något gick fel: {exc}'
 
     return template('register', error=error, success=success)
 
@@ -128,40 +145,59 @@ def register():
 @route('/login', method='POST')
 def login():
     """
-    Authenticate user credentials and set secure cookie.
+    Authenticate user credentials using e-post and set secure cookie.
 
     Supports AJAX and standard form submissions.
 
-    :form username: user's username
+    :form email: user's email
     :form password: user's password
     :return: JSON or redirect/template response
     """
-    username = request.forms.get('username', '').strip()
+    # Hämta formdata
+    email = request.forms.get('email', '').strip().lower()
     password = request.forms.get('password', '').encode('utf-8')
 
-    # Retrieve stored password hash
+    # Hämta lagrat lösenordsha och användarnamn baserat på e-post
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT password_hash FROM users WHERE username = %s", (username,)
+                """
+                SELECT username, password_hash
+                  FROM users
+                 WHERE email = %s
+                """,
+                (email,)
             )
             user = cur.fetchone()
 
+    # Kontrollera lösenordet
     valid = bool(user and bcrypt.checkpw(password, user['password_hash'].encode('utf-8')))
 
-    # AJAX login
+    # AJAX-inloggning
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         if valid:
-            response.set_cookie('account', username, secret=SECRET_KEY, path='/')
+            # Spara username i cookie för att kunna hälsa användaren
+            response.set_cookie('account', user['username'], secret=SECRET_KEY, path='/')
             return HTTPResponse(status=200, body=json.dumps({'ok': True}))
-        return HTTPResponse(status=401, body=json.dumps({'ok': False, 'error': 'Invalid credentials'}))
+        return HTTPResponse(
+            status=401,
+            body=json.dumps({'ok': False, 'error': 'Fel e-post eller lösenord'})
+        )
 
-    # Standard form login
+    # Vanlig form-inloggning
     if valid:
-        response.set_cookie('account', username, secret=SECRET_KEY, path='/')
+        response.set_cookie('account', user['username'], secret=SECRET_KEY, path='/')
         return redirect('/')
+    
+    # Ogiltiga uppgifter
+    return template(
+        'index',
+        recipes=[],
+        login_error='Fel e-post eller lösenord.',
+        login_success=False,
+        logout_success=False
+    )
 
-    return template('index', recipes=[], login_error='Incorrect username or password.')
 
 
 @route('/logout')
