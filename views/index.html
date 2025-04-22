@@ -65,7 +65,19 @@
               <img src="{{recipe['image']}}" class="card-img-top" alt="{{recipe['title']}}">
               <div class="card-body d-flex flex-column">
                 <h5 class="card-title">{{recipe['title']}}</h5>
-                <a href="https://spoonacular.com/recipes/{{recipe['title'].replace(' ', '-')}}-{{recipe['id']}}" target="_blank" class="btn btn-warning mt-auto">Visa recept</a>
+                <div class="d-flex justify-content-between align-items-center gap-2 mt-auto">
+                  <button 
+                    class="favorite-star"
+                    data-recipe-id="{{recipe['id']}}"
+                    data-title="{{recipe['title']}}"
+                    data-image="{{recipe['image']}}">
+                    ⭐
+                  </button>
+                
+                  <a href="https://spoonacular.com/recipes/{{recipe['title'].replace(' ', '-')}}-{{recipe['id']}}" target="_blank" class="btn btn-warning flex-fill">
+                    Visa recept
+                  </a>
+                </div>                
               </div>
             </div>
           </div>
@@ -118,7 +130,7 @@
 
 % if login_success:
   <div class="alert alert-success text-center" role="alert">
-    Login Succeeded! 🎉
+    Login Succeeded!
   </div>
 % end
 
@@ -131,10 +143,6 @@
 
   <!-- AJAX‑scriptet -->
   <script src="/static/js/login.js"></script>
-  
-  
-</body>
-</html>
-  
+  <script src="/static/js/testajax.js"></script>
 </body>
 </html>
