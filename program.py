@@ -1,14 +1,29 @@
-from bottle import route, run, template, request, static_file, response, redirect, HTTPResponse, TEMPLATE_PATH
-from psycopg2 import errors
-from psycopg2.extras import RealDictCursor
-import requests
+# -*- coding: utf-8 -*-
+"""
+Main application for the "Recept från kylen" web service.
+
+Provides user registration, authentication, recipe search via Spoonacular API,
+and management of user favorites using a PostgreSQL backend.
+"""
+
 import os
+
+# Standard library imports
 from dotenv import load_dotenv
+
+# Third-party imports
+from bottle import (
+    route, run, template, request, static_file,
+    response, redirect, HTTPResponse, TEMPLATE_PATH
+)
 import psycopg2
+from psycopg2.extras import RealDictCursor
+from psycopg2 import errors
 import bcrypt
+import requests
 import json
 
-# Configure template directory and environment variables
+# Load environment variables and configure templates
 BASE_DIR = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(BASE_DIR, 'views'))
 load_dotenv()
@@ -19,9 +34,12 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 def get_db_connection():
     """
-    Create a new database connection using environment settings.
+    Create and return a new database connection.
 
-    :return: psycopg2 connection with RealDictCursor factory
+    Uses environment variables for host, port, dbname, user, and password.
+    The cursor_factory is set to RealDictCursor for dict-like fetches.
+
+    :return: psycopg2 connection object
     """
     return psycopg2.connect(
         host=os.getenv('DB_HOST'),
@@ -36,33 +54,53 @@ def get_db_connection():
 @route('/')
 def index():
     """
-    Render the home page with optional login/logout messages.
+    Render the home page.
 
     Query parameters:
-    - login=1 to show login success
-    - logout=1 to show logout success
+        login=1   -> show welcome alert
+        logout=1  -> show logout confirmation
+
+    If user is logged in (cookie present), look up username.
 
     :return: rendered index template
     """
-    recipes = []
+    recipes = []  # no search results on GET
     login_success = request.query.login == '1'
     logout_success = request.query.logout == '1'
+
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
+    username = None
+    if user_id:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT username FROM users WHERE id = %s", (user_id,)
+                )
+                row = cur.fetchone()
+                if row:
+                    username = row['username']
 
     return template(
         'index',
         recipes=recipes,
         login_success=login_success,
         logout_success=logout_success,
-        login_error=None
+        login_error=None,
+        username=username
     )
 
 
 @route('/', method='POST')
 def get_recipes():
     """
-    Fetch recipes from Spoonacular API based on user‐provided ingredients.
+    Handle recipe search form submission.
+
+    Reads comma-separated ingredients from form, calls Spoonacular API,
+    and re-renders index template with search results.
+
+    :return: rendered index template with recipe list
     """
-    ingredients = request.forms.get('ingredients')
+    ingredients = request.forms.get('ingredients', '').strip()
     url = 'https://api.spoonacular.com/recipes/findByIngredients'
     params = {
         'ingredients': ingredients,
@@ -73,43 +111,49 @@ def get_recipes():
     resp = requests.get(url, params=params)
     recipes = resp.json() if resp.status_code == 200 else []
 
-    # pass the same four variables that index() does
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
+    username = None
+    if user_id:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+                row = cur.fetchone()
+                if row:
+                    username = row['username']
+
     return template(
         'index',
         recipes=recipes,
         login_success=False,
         logout_success=False,
-        login_error=None
+        login_error=None,
+        username=username
     )
 
 
 @route('/register', method=['GET', 'POST'])
 def register():
     """
-    Handle user registration, hashing passwords and storing new users.
+    Register a new user or show registration form.
 
-    :GET: render registration form
-    :POST: create a new user with hashed password
-    :return: rendered register template with success or error message
+    GET:  render the registration form.
+    POST: process form data, validate input, hash password,
+          insert new user into database.
+
+    :return: rendered register template with status message
     """
     error = None
     success = None
 
     if request.method == 'POST':
         username = request.forms.get('username', '').strip()
+        email = request.forms.get('email', '').strip().lower()
         password = request.forms.get('password', '')
 
-        # Enforce minimum password length
-        if request.method == 'POST':
-            username = request.forms.get('username', '').strip()
-            email    = request.forms.get('email', '').strip().lower()
-            password = request.forms.get('password', '')
-
-        # Enkel e‑postvalidering
         if not email or '@' not in email:
-            error = 'Ogiltig e‑postadress.'
+            error = 'Invalid email address.'
         elif len(password) < 8:
-            error = 'Lösenord måste vara minst 8 tecken.'
+            error = 'Password must be at least 8 characters.'
         else:
             pw_hash = bcrypt.hashpw(
                 password.encode('utf-8'),
@@ -127,89 +171,82 @@ def register():
                             (username, email, pw_hash)
                         )
                         conn.commit()
-                        success = 'Registrering lyckades! Du kan nu logga in.'
+                        success = 'Registration successful! You can now log in.'
             except errors.UniqueViolation as e:
-                # Avgör om det är username eller email som krockar
                 constraint = e.diag.constraint_name or ''
                 if 'email' in constraint:
-                    error = 'E‑postadressen är redan registrerad.'
+                    error = 'Email is already registered.'
                 else:
-                    error = 'Användarnamnet är upptaget.'
+                    error = 'Username is already taken.'
             except Exception as exc:
-                error = f'Något gick fel: {exc}'
+                error = f'An unexpected error occurred: {exc}'
 
     return template('register', error=error, success=success)
 
 
 @route('/login', method='POST')
 def login():
+    """
+    Authenticate user with email and password.
+
+    Sets cookie and redirects to home with login confirmation.
+
+    :return: redirect or rendered template on failure
+    """
     email = request.forms.get('email', '').strip().lower()
-    password = request.forms.get('password', '').encode('utf-8')
+    password_raw = request.forms.get('password', '').encode('utf-8')
 
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("""
-                SELECT id, username, password_hash
-                FROM users
-                WHERE email = %s
-            """, (email,))
+            cur.execute(
+                "SELECT id, username, password_hash FROM users WHERE email = %s",
+                (email,)
+            )
             user = cur.fetchone()
 
-    valid = bool(user and bcrypt.checkpw(password, user['password_hash'].encode('utf-8')))
+    valid = bool(user and bcrypt.checkpw(
+        password_raw, user['password_hash'].encode('utf-8')
+    ))
 
-    # AJAX-inloggning
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        if valid:
-            response.set_cookie(
-                'user_id',
-                str(user['id']),
-                secret=SECRET_KEY,
-                path='/',
-                httponly=True,
-                samesite='Lax'
-            )
-            return HTTPResponse(status=200, body=json.dumps({'ok': True}))
-        return HTTPResponse(
-            status=401,
-            body=json.dumps({'ok': False, 'error': 'Fel e-post eller lösenord'})
-        )
-
-    # Vanlig form-inloggning
     if valid:
-        response.set_cookie(
-            'user_id',
-            str(user['id']),
-            path='/',
-            secret=SECRET_KEY,
-            httponly=True,
-            samesite='Lax'  
-        )
-        
-        return redirect('/')
+        response.set_cookie('user_id', str(user['id']), secret=SECRET_KEY, path='/')
+        return redirect('/?login=1')
 
+    # Login failed
     return template(
         'index',
         recipes=[],
-        login_error='Fel e-post eller lösenord.',
+        login_error='Invalid email or password.',
         login_success=False,
-        logout_success=False
+        logout_success=False,
+        username=None
     )
+
 
 @route('/logout')
 def logout():
     """
-    Clear the user session cookie and redirect to home.
+    Log out current user by deleting their session cookie.
 
-    :return: redirect to index with logout confirmation
+    :return: redirect to home with logout confirmation
     """
     response.delete_cookie('user_id', path='/')
     return redirect('/?logout=1')
 
+
 @route('/favorite', method='POST')
 def add_favorite():
+    """
+    Add a recipe to the user's favorites.
+
+    Expects recipe_id, title, and image in form data.
+    Returns JSON {'ok': True/False} or HTTP error.
+    """
     user_id = request.get_cookie('user_id', secret=SECRET_KEY)
     if not user_id:
-        return HTTPResponse(status=401, body=json.dumps({'ok': False, 'error': 'Inte inloggad'}))
+        return HTTPResponse(
+            status=401, body=json.dumps({'ok': False, 'error': 'Not logged in'})
+        )
 
     recipe_id = request.forms.get('recipe_id')
     title = request.forms.get('title')
@@ -218,42 +255,54 @@ def add_favorite():
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO favorites (user_id, recipe_id, title, image)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT DO NOTHING
-                """, (user_id, recipe_id, title, image))
+                    """, (user_id, recipe_id, title, image)
+                )
 
                 if cur.rowcount == 0:
                     return {'ok': False}
 
                 conn.commit()
                 return {'ok': True}
-    except Exception as e:
-        return HTTPResponse(status=500, body=json.dumps({'ok': False, 'error': str(e)}))
-
+    except Exception as exc:
+        return HTTPResponse(
+            status=500, body=json.dumps({'ok': False, 'error': str(exc)})
+        )
 
 
 @route('/favorites')
 def show_favorites():
-    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
+    """
+    Display all recipes favorited by the current user.
 
+    Redirects to home if not logged in.
+    """
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
     if not user_id:
         return redirect('/')
 
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("""
-                SELECT recipe_id, title, image
-                FROM favorites
-                WHERE user_id = %s
-            """, (user_id,))
+            cur.execute(
+                "SELECT recipe_id, title, image FROM favorites WHERE user_id = %s",
+                (user_id,)
+            )
             favorites = cur.fetchall()
 
     return template('favorites', favorites=favorites)
 
+
 @route('/remove-favorite', method='POST')
 def remove_favorite():
+    """
+    Remove a recipe from the user's favorites.
+
+    Expects recipe_id in form data. Redirects back to favorites list.
+    """
     user_id = request.get_cookie('user_id', secret=SECRET_KEY)
     recipe_id = request.forms.get('recipe_id')
 
@@ -263,26 +312,28 @@ def remove_favorite():
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute("""
-                    DELETE FROM favorites
-                    WHERE user_id = %s AND recipe_id = %s
-                """, (user_id, recipe_id))
+                cur.execute(
+                    "DELETE FROM favorites WHERE user_id = %s AND recipe_id = %s",
+                    (user_id, recipe_id)
+                )
                 conn.commit()
-    except Exception as e:
-        print("ERROR när du tog bort:", e)
+    except Exception as exc:
+        print(f"Error removing favorite: {exc}")
 
     return redirect('/favorites')
+
 
 @route('/static/<filepath:path>')
 def serve_static(filepath):
     """
-    Serve static files from the ./static directory.
+    Serve static assets from the ./static directory.
 
-    :param filepath: relative path to the static asset
+    :param filepath: path of the requested static file
     :return: File response
     """
     return static_file(filepath, root='./static')
 
 
 if __name__ == '__main__':
+    # Start development server on localhost:8080
     run(host='localhost', port=8080, debug=True)
