@@ -15,8 +15,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 5px 10px; /* Minska horisontellt utrymme */
-    background-color: transparent; /* Gör bakgrunden genomskinlig */
+    padding: 5px 10px;
+    background-color: transparent; 
     box-shadow: none;
     z-index: 10;
   }
@@ -55,7 +55,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* Flytta upp innehållet */
+    justify-content: flex-start; 
     text-align: center;
     padding: 0.5rem 1rem 2rem;
     box-sizing: border-box;
@@ -78,12 +78,12 @@ body {
     font-size: 1.2rem;
     font-style: italic;
     color: #666;
-    margin: 0 0 3rem; /* Större avstånd till söksektionen */
+    margin: 0 0 3rem; 
   }
   
   /* SEARCH */
   .search-section {
-    margin-top: 4rem;  /* justera värdet efter hur mycket utrymme du vill ha */
+    margin-top: 4rem; 
   }
 
   .search-section h2 {
