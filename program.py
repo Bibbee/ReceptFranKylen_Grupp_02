@@ -83,7 +83,6 @@ def get_recipes():
     )
 
 
-
 @route('/register', method=['GET', 'POST'])
 def register():
     """
@@ -144,40 +143,31 @@ def register():
 
 @route('/login', method='POST')
 def login():
-    """
-    Authenticate user credentials using e-post and set secure cookie.
-
-    Supports AJAX and standard form submissions.
-
-    :form email: user's email
-    :form password: user's password
-    :return: JSON or redirect/template response
-    """
-    # Hämta formdata
     email = request.forms.get('email', '').strip().lower()
     password = request.forms.get('password', '').encode('utf-8')
 
-    # Hämta lagrat lösenordsha och användarnamn baserat på e-post
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT username, password_hash
-                  FROM users
-                 WHERE email = %s
-                """,
-                (email,)
-            )
+            cur.execute("""
+                SELECT id, username, password_hash
+                FROM users
+                WHERE email = %s
+            """, (email,))
             user = cur.fetchone()
 
-    # Kontrollera lösenordet
     valid = bool(user and bcrypt.checkpw(password, user['password_hash'].encode('utf-8')))
 
     # AJAX-inloggning
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         if valid:
-            # Spara username i cookie för att kunna hälsa användaren
-            response.set_cookie('account', user['username'], secret=SECRET_KEY, path='/')
+            response.set_cookie(
+                'user_id',
+                str(user['id']),
+                secret=SECRET_KEY,
+                path='/',
+                httponly=True,
+                samesite='Lax'
+            )
             return HTTPResponse(status=200, body=json.dumps({'ok': True}))
         return HTTPResponse(
             status=401,
@@ -186,10 +176,17 @@ def login():
 
     # Vanlig form-inloggning
     if valid:
-        response.set_cookie('account', user['username'], secret=SECRET_KEY, path='/')
+        response.set_cookie(
+            'user_id',
+            str(user['id']),
+            path='/',
+            secret=SECRET_KEY,
+            httponly=True,
+            samesite='Lax'  
+        )
+        
         return redirect('/')
-    
-    # Ogiltiga uppgifter
+
     return template(
         'index',
         recipes=[],
@@ -198,8 +195,6 @@ def login():
         logout_success=False
     )
 
-
-
 @route('/logout')
 def logout():
     """
@@ -207,9 +202,76 @@ def logout():
 
     :return: redirect to index with logout confirmation
     """
-    response.delete_cookie('account', path='/')
+    response.delete_cookie('user_id', path='/')
     return redirect('/?logout=1')
 
+@route('/favorite', method='POST')
+def add_favorite():
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
+    if not user_id:
+        return HTTPResponse(status=401, body=json.dumps({'ok': False, 'error': 'Inte inloggad'}))
+
+    recipe_id = request.forms.get('recipe_id')
+    title = request.forms.get('title')
+    image = request.forms.get('image')
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO favorites (user_id, recipe_id, title, image)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT DO NOTHING
+                """, (user_id, recipe_id, title, image))
+
+                if cur.rowcount == 0:
+                    return {'ok': False}
+
+                conn.commit()
+                return {'ok': True}
+    except Exception as e:
+        return HTTPResponse(status=500, body=json.dumps({'ok': False, 'error': str(e)}))
+
+
+
+@route('/favorites')
+def show_favorites():
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
+
+    if not user_id:
+        return redirect('/')
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT recipe_id, title, image
+                FROM favorites
+                WHERE user_id = %s
+            """, (user_id,))
+            favorites = cur.fetchall()
+
+    return template('favorites', favorites=favorites)
+
+@route('/remove-favorite', method='POST')
+def remove_favorite():
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
+    recipe_id = request.forms.get('recipe_id')
+
+    if not user_id or not recipe_id:
+        return redirect('/favorites')
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    DELETE FROM favorites
+                    WHERE user_id = %s AND recipe_id = %s
+                """, (user_id, recipe_id))
+                conn.commit()
+    except Exception as e:
+        print("ERROR när du tog bort:", e)
+
+    return redirect('/favorites')
 
 @route('/static/<filepath:path>')
 def serve_static(filepath):

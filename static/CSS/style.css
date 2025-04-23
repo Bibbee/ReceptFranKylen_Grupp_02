@@ -141,6 +141,28 @@ body {
   .favorite-star:hover {
     transform: scale(1.2);
   }
+
+  .trash-button {
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 20px;
+    transition: transform 0.2s ease;
+    color: #333;
+  }
+  
+  .trash-button:hover {
+    transform: scale(1.2);
+    color: #c0392b; 
+  }
+  
+  .trash-button:focus {
+    outline: none;
+  }
+
+  
+  
   
   /* RESPONSIVE */
   @media (max-width: 900px) {
