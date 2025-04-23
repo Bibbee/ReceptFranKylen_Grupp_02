@@ -143,6 +143,23 @@
 
   <!-- AJAX‑scriptet -->
   <script src="/static/js/login.js"></script>
-  <script src="/static/js/testajax.js"></script>
+  <script src="/static/js/favorites.js"></script>
+
+  <div id="toastSaved" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+    <div class="d-flex">
+      <div class="toast-body">
+        The recipe has been saved to your favorites!
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+
+  <div id="toastExists" class="toast text-bg-warning position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">This recipe is already saved!</div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+
 </body>
 </html>
