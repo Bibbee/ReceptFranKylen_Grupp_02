@@ -41,7 +41,7 @@ Gör följande:
   API_KEY=Din_API_nyckel_här  
 
 - Byt ut `Din_API_nyckel_här` mot din riktiga API-nyckel från https://spoonacular.com/food-api  
-- Kontakta någon i gruppen om du behöver mer information  
+- Kontakta någon i gruppen för mer information  
 
 ---
 
