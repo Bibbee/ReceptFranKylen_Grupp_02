@@ -1,6 +1,7 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.recipe-img').forEach(img => {
       img.addEventListener('click', () => {
@@ -29,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.recipe-img').forEach(img => {
@@ -48,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
