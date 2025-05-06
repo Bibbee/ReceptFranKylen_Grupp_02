@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.recipe-img').forEach(img => {
       img.addEventListener('click', () => {
@@ -21,3 +22,22 @@ document.addEventListener('DOMContentLoaded', () => {
   
   
   
+=======
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.recipe-img').forEach(img => {
+    img.addEventListener('click', () => {
+      document.getElementById('recipeModalLabel').textContent = img.dataset.title;
+      document.getElementById('recipeModalImage').src = img.dataset.image;
+      document.getElementById('recipeModalDifficulty').textContent = img.dataset.difficulty || 'Okänd';
+      document.getElementById('recipeModalTime').textContent = img.dataset.time || 'Okänd';
+      document.getElementById('recipeModalServings').textContent = img.dataset.servings || 'Okänt';
+      document.getElementById('recipeModalNutrition').textContent = img.dataset.nutrition || 'Information saknas';
+
+      const modal = new bootstrap.Modal(document.getElementById('recipeModal'));
+      modal.show();
+    });
+  });
+});
+</script>
+>>>>>>> Stashed changes
