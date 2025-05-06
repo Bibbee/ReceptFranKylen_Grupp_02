@@ -97,8 +97,6 @@ def get_recipes():
 
     Reads comma-separated ingredients from form, calls Spoonacular API,
     and re-renders index template with search results.
-
-    :return: rendered index template with recipe list
     """
     ingredients = request.forms.get('ingredients', '').strip()
     url = 'https://api.spoonacular.com/recipes/findByIngredients'
@@ -109,8 +107,52 @@ def get_recipes():
     }
 
     resp = requests.get(url, params=params)
-    recipes = resp.json() if resp.status_code == 200 else []
+    print("STATUSKOD:", resp.status_code)
+    print("SVAR:", resp.text)
 
+    results = resp.json() if resp.status_code == 200 else []
+
+    recipes = []
+    for r in results:
+        details_url = f"https://api.spoonacular.com/recipes/{r['id']}/information?includeNutrition=true"
+        details_params = {'apiKey': API_KEY}
+        details_resp = requests.get(details_url, params=details_params)
+
+        if details_resp.status_code == 200:
+            info = details_resp.json()
+
+            # Näringsinnehåll
+            nutrition = info.get('nutrition', {}).get('nutrients', [])
+            kcal = next((n for n in nutrition if n['name'] == 'Calories'), None)
+            kcal_str = f"{kcal['amount']} {kcal['unit']}" if kcal else 'Information saknas'
+
+            # Svårighetsgrad
+            time = info.get('readyInMinutes', 0)
+            difficulty = 'Lätt' if time < 30 else 'Medel' if time < 60 else 'Svår'
+
+            # Instruktioner som HTML-lista
+            steps = info.get('analyzedInstructions', [])
+            if steps and steps[0].get('steps'):
+                instructions = "<ol>"
+                for step in steps[0]['steps']:
+                    instructions += f"<li>{step['step']}</li>"
+                instructions += "</ol>"
+            else:
+                instructions = f"<p>{info.get('instructions', 'Ingen beskrivning tillgänglig')}</p>"
+
+            # Bygg receptet
+            recipes.append({
+                'id': r['id'],
+                'title': r['title'],
+                'image': r['image'],
+                'readyInMinutes': time,
+                'servings': info.get('servings', 'Okänt'),
+                'nutrition': kcal_str,
+                'difficulty': difficulty,
+                'instructions': instructions
+            })
+
+    # Hämta användarnamn om inloggad
     user_id = request.get_cookie('user_id', secret=SECRET_KEY)
     username = None
     if user_id:
@@ -129,6 +171,7 @@ def get_recipes():
         login_error=None,
         username=username
     )
+
 
 
 @route('/register', method=['GET', 'POST'])
