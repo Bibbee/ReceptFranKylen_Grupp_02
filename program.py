@@ -86,9 +86,9 @@ def index():
         login_success=login_success,
         logout_success=logout_success,
         login_error=None,
-        username=username
+        username=username,
+        no_results=False
     )
-
 
 @route('/', method='POST')
 def get_recipes():
@@ -151,6 +151,31 @@ def get_recipes():
                 'difficulty': difficulty,
                 'instructions': instructions
             })
+
+    # Kontrollera om resultatet är tomt
+    no_results = len(recipes) == 0
+
+    # Hämta användarnamn om inloggad
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
+    username = None
+    if user_id:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+                row = cur.fetchone()
+                if row:
+                    username = row['username']
+
+    return template(
+        'index',
+        recipes=recipes,
+        login_success=False,
+        logout_success=False,
+        login_error=None,
+        username=username,
+        no_results=no_results  # skickas till mallen
+    )
+
 
     # Hämta användarnamn om inloggad
     user_id = request.get_cookie('user_id', secret=SECRET_KEY)
