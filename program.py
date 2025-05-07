@@ -316,19 +316,32 @@ def add_favorite():
             status=401, body=json.dumps({'ok': False, 'error': 'Not logged in'})
         )
 
+    #Hämta all data från formuläret
     recipe_id = request.forms.get('recipe_id')
     title = request.forms.get('title')
     image = request.forms.get('image')
+    difficulty = request.forms.get('difficulty')
+    ready_in_minutes = request.forms.get('ready_in_minutes')
+    servings = request.forms.get('servings')
+    nutrition = request.forms.get('nutrition')
+    instructions = request.forms.get('instructions')
 
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO favorites (user_id, recipe_id, title, image)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO favorites (
+                        user_id, recipe_id, title, image, difficulty,
+                        ready_in_minutes, servings, nutrition, instructions
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT DO NOTHING
-                    """, (user_id, recipe_id, title, image)
+                    """,
+                    (
+                        user_id, recipe_id, title, image, difficulty,
+                        ready_in_minutes, servings, nutrition, instructions
+                    )
                 )
 
                 if cur.rowcount == 0:
@@ -356,9 +369,21 @@ def show_favorites():
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT recipe_id, title, image FROM favorites WHERE user_id = %s",
-                (user_id,)
-            )
+    """
+    SELECT
+        recipe_id,
+        title,
+        image,
+        difficulty,
+        ready_in_minutes,
+        servings,
+        nutrition,
+        instructions
+    FROM favorites
+    WHERE user_id = %s
+    """,
+    (user_id,)
+)
             favorites = cur.fetchall()
 
     return template('favorites', favorites=favorites)
