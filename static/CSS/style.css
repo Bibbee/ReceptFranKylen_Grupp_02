@@ -191,6 +191,116 @@ body {
     font-size: 1.1rem;
   }
   
+  .search-section {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .search-bar {
+    display: flex;
+    border: 1px solid #ccc;
+    border-radius: 50px;
+    overflow: hidden;
+    background: white;
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .search-bar input.form-control {
+    flex-grow: 1;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    border-radius: 50px 0 0 50px;
+    outline: none;
+  }
+  
+  .search-bar .btn-warning {
+    border-radius: 0 50px 50px 0;
+    padding: 0.8rem 1.5rem;
+    background-color: #f48c06;
+    color: white;
+    font-weight: bold;
+    border: none;
+    transition: background-color 0.2s;
+  }
+  
+  .search-bar .btn-warning:hover {
+    background-color: #e07b00;
+  }
+  
+  /* Chips-style tags */
+  .filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .filter-tags label {
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+  }
+  
+  .filter-tags input[type="radio"] {
+    display: none;
+  }
+  
+  .filter-tags span {
+    background-color: #f48c06;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    transition: background-color 0.2s;
+  }
+  
+  .filter-tags label:hover span {
+    background-color: #e07b00;
+  }
+  
+  .filter-tags input[type="radio"]:checked + span {
+    background-color: #c45b00;
+    font-weight: bold;
+  }
+  
+  /* Chip-insida i sökfältet (vänster om knappen) */
+.chip-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-left: 1rem;
+  flex-grow: 1;
+  min-height: 48px;
+}
+
+.chip {
+  background-color: #f48c06;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.chip .remove-chip {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  margin-left: 4px;
+}
+
 
   /* RESPONSIVE */
   @media (max-width: 900px) {
