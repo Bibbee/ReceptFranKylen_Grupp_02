@@ -92,7 +92,16 @@
           <h5 class="card-title">{{recipe['title']}}</h5>
           <div class="d-flex justify-content-between align-items-center gap-2 mt-auto">
             <!-- Favorite button triggers POST to /favorite -->
-            <button class="favorite-star" data-recipe-id="{{recipe['id']}}" data-title="{{recipe['title']}}" data-image="{{recipe['image']}}">⭐</button>
+            <button class="favorite-star" 
+              data-recipe-id="{{recipe['id']}}" 
+              data-title="{{recipe['title']}}" 
+              data-image="{{recipe['image']}}" 
+              data-difficulty="{{recipe.get('difficulty', 'Okänd')}}" 
+              data-time="{{recipe.get('readyInMinutes', 'Okänt')}}" 
+              data-servings="{{recipe.get('servings', 'Okänt')}}" 
+              data-nutrition="{{ (recipe.get('nutrition') or 'Information saknas').replace('"', '&quot;') }}"
+              data-instructions="{{ (recipe.get('instructions') or 'Instruktioner saknas.').replace('\n', ' ').replace('"', '&quot;') }}"
+            >⭐</button>
             <!-- Link to full recipe on Spoonacular -->
             <a href="https://spoonacular.com/recipes/{{recipe['title'].replace(' ', '-')}}-{{recipe['id']}}" target="_blank" class="btn btn-warning flex-fill">View recipe</a>
           </div>
@@ -167,8 +176,6 @@
         <p><strong>Tillagningstid:</strong> <span id="recipeModalTime"></span> minuter</p>
         <p><strong>Portioner:</strong> <span id="recipeModalServings"></span></p>
         <p><strong>Näringsinnehåll:</strong> <span id="recipeModalNutrition"></span></p>
-        
-        <!-- INSTRUKTIONER -->
         <p><strong>Instruktioner:</strong></p>
         <p id="recipeModalInstructions" class="text-start"></p>
       </div>
