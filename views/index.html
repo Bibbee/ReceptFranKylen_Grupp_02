@@ -59,14 +59,44 @@
     <p>Turn fridge leftovers into tasty masterpieces!</p>
   </div>
 
-  <!-- SEARCH SECTION: ingredient input form -->
-  <div class="search-section mb-5">
-    <h2>Write your ingredients here...</h2>
-    <form action="/" method="post" class="search-form d-flex justify-content-center gap-2">
-      <input type="text" name="ingredients" class="form-control" placeholder="t.ex. tomato, cheese, pasta" required>
-      <button type="submit" class="btn btn-warning">Find recipe!</button>
-    </form>
-  </div>
+<!-- SEARCH SECTION: modern layout -->
+<div class="search-section">
+  <form action="/" method="post" class="search-form">
+
+    <!-- Sökfält med chip och knapp -->
+    <div class="search-bar">
+      <input type="text" name="ingredients" id="ingredients-input" class="form-control" placeholder="Write your ingridients here..." required>
+      <div class="chip-area" id="selected-chip"></div>
+      <button type="submit" class="btn btn-warning">
+        Find recipe <span class="search-icon"></span>
+      </button>
+    </div>
+
+    <!-- Filter-taggar -->
+    <div class="filter-tags mt-3">
+      <label>
+        <input type="radio" name="diet" value="Vegetarian">
+        <span data-text="Vegetarian">Vegetarian</span>
+      </label>
+      <label>
+        <input type="radio" name="diet" value="Vegan">
+        <span data-text="Vegan">Vegan</span>
+      </label>
+      <label>
+        <input type="radio" name="diet" value="Gluten-free">
+        <span data-text="Gluten-free">Gluten-Free</span>
+      </label>
+      <label>
+        <input type="radio" name="diet" value="Ketogenic">
+        <span data-text="Ketogenic">Ketogenic</span>
+      </label>
+    </div>
+
+  </form>
+</div>
+
+
+
 
  <!-- RECIPE LIST: looping through results -->
 % if no_results:
@@ -184,6 +214,7 @@
   </div>
 </div>
 <script src="/static/js/RecipeModal.js"></script>
+<script src="/static/js/filters.js"></script>
 
 </body>
 </html>
