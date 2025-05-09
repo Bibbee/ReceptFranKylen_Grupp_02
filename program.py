@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Main application for the "Recept från kylen" web service.
 
