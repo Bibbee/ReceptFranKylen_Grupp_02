@@ -120,6 +120,8 @@ body {
   .card {
     border-radius: 0.75rem;
     overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
   }
 
   .card-img-top {
@@ -134,6 +136,13 @@ body {
 
   .card .btn-warning:hover {
     background-color: #e07b00;
+  }
+  
+  .card:hover {
+    transform: scale(1.05); /* 1.2 kan bli för mycket i grid */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    z-index: 10; /* så att det lägger sig över andra kort */
+    position: relative;
   }
 
   .favorite-star {
@@ -299,6 +308,7 @@ body {
   gap: 10px;
   justify-content: center;
   margin-top: 1rem;
+  margin-bottom: 2rem;
 }
 
 .filter-tags label {
