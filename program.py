@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Main application for the "Recept från kylen" web service.
 
@@ -81,81 +80,117 @@ def index():
                     username = row['username']
 
     return template(
-        'index',
-        recipes=recipes,
-        login_success=login_success,
-        logout_success=logout_success,
-        login_error=None,
-        username=username,
-        no_results=False
+    'index',
+    recipes=recipes,
+    login_success=login_success,
+    logout_success=logout_success,
+    login_error=None,
+    username=username,
+    no_results=False,
+    email=None
     )
 
 @route('/', method='POST')
 def get_recipes():
     """
-    Handle recipe search form submission.
-
-    Reads comma-separated ingredients from form, calls Spoonacular API,
-    and re-renders index template with search results.
+    Handle recipe search form submission using diet + ingredients.
+    Fetches recipes from Spoonacular API and filters based on diet manually.
     """
     ingredients = request.forms.get('ingredients', '').strip()
-    url = 'https://api.spoonacular.com/recipes/findByIngredients'
+    diet = request.forms.get('diet', '').strip().lower()
+
+    # Base API URL
+    url = 'https://api.spoonacular.com/recipes/complexSearch'
     params = {
-        'ingredients': ingredients,
+        'apiKey': API_KEY,
         'number': 20,
-        'apiKey': API_KEY
+        'addRecipeInformation': True,
+        'fillIngredients': True
     }
 
+    # Optional query parameters
+    if ingredients:
+        params['query'] = ingredients
+    if diet:
+        params['diet'] = diet
+
+    # Fetch basic recipe list
     resp = requests.get(url, params=params)
     print("STATUSKOD:", resp.status_code)
     print("SVAR:", resp.text)
 
-    results = resp.json() if resp.status_code == 200 else []
+    data = resp.json() if resp.status_code == 200 else {}
+    results = data.get('results', [])
 
     recipes = []
+
+    # Define keywords for dietary filtering
+    meat_words = ['chicken', 'beef', 'pork', 'bacon', 'turkey', 'ham', 'lamb']
+    dairy_egg_words = ['cheese', 'egg', 'milk', 'butter', 'yogurt', 'cream', 'honey']
+
     for r in results:
-        details_url = f"https://api.spoonacular.com/recipes/{r['id']}/information?includeNutrition=true"
-        details_params = {'apiKey': API_KEY}
-        details_resp = requests.get(details_url, params=details_params)
+        # Make a detailed API call for each recipe to get nutrition and steps
+        info_url = f"https://api.spoonacular.com/recipes/{r['id']}/information"
+        info_params = {'apiKey': API_KEY, 'includeNutrition': True}
+        info_resp = requests.get(info_url, params=info_params)
 
-        if details_resp.status_code == 200:
-            info = details_resp.json()
+        if info_resp.status_code != 200:
+            continue
 
-            # Näringsinnehåll
-            nutrition = info.get('nutrition', {}).get('nutrients', [])
-            kcal = next((n for n in nutrition if n['name'] == 'Calories'), None)
-            kcal_str = f"{kcal['amount']} {kcal['unit']}" if kcal else 'Information saknas'
+        info = info_resp.json()
 
-            # Svårighetsgrad
-            time = info.get('readyInMinutes', 0)
-            difficulty = 'Lätt' if time < 30 else 'Medel' if time < 60 else 'Svår'
+        # Extract ingredients list and title
+        title = r['title'].lower()
+        ingredients_list = [i['name'].lower() for i in info.get('extendedIngredients', [])]
 
-            # Instruktioner som HTML-lista
-            steps = info.get('analyzedInstructions', [])
-            if steps and steps[0].get('steps'):
-                instructions = "<ol>"
-                for step in steps[0]['steps']:
-                    instructions += f"<li>{step['step']}</li>"
-                instructions += "</ol>"
-            else:
-                instructions = f"<p>{info.get('instructions', 'Ingen beskrivning tillgänglig')}</p>"
+        # Filter recipes based on diet manually
+        if diet == "vegetarian" and any(word in title or any(word in ing for ing in ingredients_list) for word in meat_words):
+            continue
+        if diet == "vegan" and any(word in title or any(word in ing for ing in ingredients_list) for word in meat_words + dairy_egg_words):
+            continue
 
-            # Bygg receptet
-            recipes.append({
-                'id': r['id'],
-                'title': r['title'],
-                'image': r['image'],
-                'readyInMinutes': time,
-                'servings': info.get('servings', 'Okänt'),
-                'nutrition': kcal_str,
-                'difficulty': difficulty,
-                'instructions': instructions
-            })
+        # Extract calories
+        nutrition = info.get('nutrition', {}).get('nutrients', [])
+        kcal = next((n for n in nutrition if n['name'] == 'Calories'), None)
+        kcal_str = f"{kcal['amount']} {kcal['unit']}" if kcal else 'Information saknas'
 
-    # Kontrollera om resultatet är tomt
+        # Determine difficulty based on time
+        time = info.get('readyInMinutes', 0)
+        difficulty = 'Lätt' if time < 30 else 'Medel' if time < 60 else 'Svår'
+
+        # Fetch step-by-step instructions
+        steps = info.get('analyzedInstructions', [])
+        if steps and steps[0].get('steps'):
+            instructions = "<ol>" + "".join(f"<li>{step['step']}</li>" for step in steps[0]['steps']) + "</ol>"
+        else:
+            instructions = info.get('instructions', 'Instruktioner saknas.')
+
+        # Add recipe to final list
+        recipes.append({
+            'id': r['id'],
+            'title': r['title'],
+            'image': r['image'],
+            'readyInMinutes': time,
+            'servings': info.get('servings', 'Okänt'),
+            'nutrition': kcal_str,
+            'difficulty': difficulty,
+            'instructions': instructions
+        })
+
+    # No results message
     no_results = len(recipes) == 0
+    no_results_message = ""
+    if no_results:
+        if ingredients and diet:
+            no_results_message = f"Inga recept hittades som både innehåller '{ingredients}' och är '{diet}'."
+        elif ingredients:
+            no_results_message = f"Inga recept hittades med ingrediensen '{ingredients}'."
+        elif diet:
+            no_results_message = f"Inga recept hittades för dieten '{diet}'."
+        else:
+            no_results_message = "Inga recept hittades."
 
-    # Hämta användarnamn om inloggad
+    # Check login status
     user_id = request.get_cookie('user_id', secret=SECRET_KEY)
     username = None
     if user_id:
@@ -166,6 +201,7 @@ def get_recipes():
                 if row:
                     username = row['username']
 
+    # Render index template
     return template(
         'index',
         recipes=recipes,
@@ -173,8 +209,13 @@ def get_recipes():
         logout_success=False,
         login_error=None,
         username=username,
-        no_results=no_results  # skickas till mallen
+        no_results=no_results,
+        no_results_message=no_results_message,
+        email=None
     )
+
+
+
 @route('/register', method=['GET', 'POST'])
 def register():
     """
@@ -256,15 +297,18 @@ def login():
         response.set_cookie('user_id', str(user['id']), secret=SECRET_KEY, path='/')
         return redirect('/?login=1')
 
-    # Login failed
+    # Login failed – return template with required variables
     return template(
         'index',
         recipes=[],
         login_error='Invalid email or password.',
         login_success=False,
         logout_success=False,
-        username=None
+        username=None,
+        email=email,  # skickas med till HTML
+        no_results=False
     )
+
 
 
 @route('/logout')

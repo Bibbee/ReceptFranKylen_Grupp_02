@@ -61,48 +61,45 @@
 
 <!-- SEARCH SECTION: modern layout -->
 <div class="search-section">
-  <form action="/" method="post" class="search-form">
-
-    <!-- Sökfält med chip och knapp -->
-    <div class="search-bar">
-      <input type="text" name="ingredients" id="ingredients-input" class="form-control" placeholder="Write your ingridients here..." required>
-      <div class="chip-area" id="selected-chip"></div>
-      <button type="submit" class="btn btn-warning">
-        Find recipe <span class="search-icon"></span>
-      </button>
+  <form action="/" method="post" style="width: 100%;">
+    <div class="search-wrapper">
+      <div class="search-bar">
+        <div class="input-container">
+          <input type="text" id="ingredients-input" name="ingredients" class="chip-input" placeholder="Write your ingredients here..." />
+          <div class="chip-area" id="chip-area"></div>
+          <input type="hidden" name="diet" id="selected-diet">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-warning find-recipe-btn">Find recipe</button>
     </div>
-
-    <!-- Filter-taggar -->
-    <div class="filter-tags mt-3">
-      <label>
-        <input type="radio" name="diet" value="Vegetarian">
-        <span data-text="Vegetarian">Vegetarian</span>
-      </label>
-      <label>
-        <input type="radio" name="diet" value="Vegan">
-        <span data-text="Vegan">Vegan</span>
-      </label>
-      <label>
-        <input type="radio" name="diet" value="Gluten-free">
-        <span data-text="Gluten-free">Gluten-Free</span>
-      </label>
-      <label>
-        <input type="radio" name="diet" value="Ketogenic">
-        <span data-text="Ketogenic">Ketogenic</span>
-      </label>
-    </div>
-
   </form>
 </div>
 
-
-
+<!-- Filter-taggar -->
+<div class="filter-tags mt-3">
+  <label>
+    <input type="radio" name="diet-radio" value="Vegetarian">
+    <span data-text="Vegetarian">Vegetarian</span>
+  </label>
+  <label>
+    <input type="radio" name="diet-radio" value="Vegan">
+    <span data-text="Vegan">Vegan</span>
+  </label>
+  <label>
+    <input type="radio" name="diet-radio" value="Gluten-free">
+    <span data-text="Gluten-free">Gluten-Free</span>
+  </label>
+  <label>
+    <input type="radio" name="diet-radio" value="Ketogenic">
+    <span data-text="Ketogenic">Ketogenic</span>
+  </label>
+</div>
 
  <!-- RECIPE LIST: looping through results -->
-% if no_results:
-<div class="no-results-message">
-  No recipes were found for the ingredients you entered. Please try different ingredients!
-</div>
+ % if no_results:
+ <div class="no-results-message">
+   {{!no_results_message}}
+ </div> 
 % elif recipes:
 <div class="recipe-container row gx-3 gy-4 justify-content-center">
   % for recipe in recipes:
@@ -153,11 +150,16 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div id="loginError" class="alert alert-danger d-none"></div>
+        % if login_error:
+          <div class="alert alert-danger" role="alert">
+          {{login_error}}
+          </div>
+        % end
           <!-- Email field -->
           <div class="mb-3">
             <label for="loginEmail" class="form-label">Email</label>
-            <input type="email" id="loginEmail" name="email" class="form-control" required placeholder="you@example.com">
+            <input type="email" id="loginEmail" name="email" class="form-control"
+            required placeholder="you@example.com" value="{{email or ''}}">
           </div>
           <!-- Password field -->
           <div class="mb-3">
@@ -215,6 +217,16 @@
 </div>
 <script src="/static/js/RecipeModal.js"></script>
 <script src="/static/js/filters.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const loginError = "{{login_error or ''}}";
+    if (loginError) {
+      const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+      loginModal.show();
+    }
+  });
+</script>
+
 
 </body>
 </html>

@@ -83,7 +83,7 @@ body {
   
   /* SEARCH */
   .search-section {
-    margin-top: 4rem; 
+    margin-top: 3rem;
   }
 
   .search-section h2 {
@@ -93,9 +93,9 @@ body {
 
   .search-form {
     display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
+    justify-content: flex-start; 
+    gap: 1rem;
+    margin-left: 300px;    
   }
 
   .search-form input.form-control {
@@ -120,6 +120,8 @@ body {
   .card {
     border-radius: 0.75rem;
     overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
   }
 
   .card-img-top {
@@ -134,6 +136,13 @@ body {
 
   .card .btn-warning:hover {
     background-color: #e07b00;
+  }
+  
+  .card:hover {
+    transform: scale(1.05); /* 1.2 kan bli för mycket i grid */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    z-index: 10; /* så att det lägger sig över andra kort */
+    position: relative;
   }
 
   .favorite-star {
@@ -191,32 +200,77 @@ body {
     font-size: 1.1rem;
   }
   
-  .search-section {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 1rem;
-    text-align: center;
-  }
-  
   .search-bar {
+    width: 900px;
     display: flex;
+    align-items: center;
+    background: white;
     border: 1px solid #ccc;
     border-radius: 50px;
-    overflow: hidden;
-    background: white;
-    max-width: 100%;
-    width: 100%;
+    padding: 0.5rem 1rem;
+    min-height: 50px;
   }
   
-  .search-bar input.form-control {
+
+  .search-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: none;
+  }   
+  
+  .input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .chip-area {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  
+  .chip-input {
     flex-grow: 1;
     border: none;
-    padding: 0.8rem 1.2rem;
-    font-size: 1rem;
-    border-radius: 50px 0 0 50px;
     outline: none;
+    font-size: 1rem;
+    background: transparent;
+  }  
+  
+  .chip {
+    background-color: #f48c06;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
   }
   
+  .chip:hover {
+    background-color: #e07b00;
+  }
+  
+  .chip .remove-chip {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
   .search-bar .btn-warning {
     border-radius: 0 50px 50px 0;
     padding: 0.8rem 1.5rem;
@@ -226,97 +280,65 @@ body {
     border: none;
     transition: background-color 0.2s;
   }
-  
-  .search-bar .btn-warning:hover {
-    background-color: #e07b00;
-  }
-  
-  /* Chips-style tags */
-  .filter-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 1rem;
-  }
-  
-  .filter-tags label {
-    cursor: pointer;
-    display: inline-block;
-    position: relative;
-  }
-  
-  .filter-tags input[type="radio"] {
-    display: none;
-  }
-  
-  .filter-tags span {
+
+.find-recipe-btn {
+    padding: 0.8rem 1.5rem;
     background-color: #f48c06;
     color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.95rem;
-    transition: background-color 0.2s;
-  }
-  
-  .filter-tags label:hover span {
-    background-color: #e07b00;
-  }
-  
-  .filter-tags input[type="radio"]:checked + span {
-    background-color: #c45b00;
     font-weight: bold;
-  }
+    border: none;
+    border-radius: 20px;
+    white-space: nowrap;
+    margin-left: 1rem; /* Avstånd från sökfältet */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
   
-  /* Chip-insida i sökfältet (vänster om knappen) */
-.chip-area {
+  
+.find-recipe-btn:hover {
+    background-color: #e07b00;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+  
+  
+ /* Chips-style tags under sökrutan */
+.filter-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  padding-left: 1rem;
-  flex-grow: 1;
-  min-height: 48px;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
 }
 
-.chip {
+.filter-tags label {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+}
+
+.filter-tags input[type="radio"] {
+  display: none;
+}
+
+.filter-tags span {
   background-color: #f48c06;
   color: white;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 20px;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-size: 0.95rem;
+  transition: background-color 0.2s, transform 0.2s;
+  display: inline-block;
   font-weight: 500;
 }
 
-.chip .remove-chip {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.1rem;
-  cursor: pointer;
-  line-height: 1;
-  margin-left: 4px;
+.filter-tags label:hover span {
+  background-color: #e07b00;
+  transform: scale(1.05);
 }
 
-
-  /* RESPONSIVE */
-  @media (max-width: 900px) {
-    .recipe-container .col-12.col-sm-6 {
-      flex: 0 0 48%;
-      max-width: 48%;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .recipe-container .col-12 {
-      flex: 0 0 100%;
-      max-width: 100%;
-    }
-    .search-form input.form-control {
-      min-width: 100%;
-    }
-  }
-  
+.filter-tags input[type="radio"]:checked + span {
+  background-color: #c45b00;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
