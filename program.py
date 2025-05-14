@@ -27,6 +27,7 @@ BASE_DIR = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(BASE_DIR, 'views'))
 load_dotenv()
 
+# Retrieve API credentials from environment variables for secure access
 API_KEY = os.getenv('API_KEY')
 SECRET_KEY = os.getenv('SECRET_KEY')
 
@@ -38,7 +39,7 @@ def get_db_connection():
     Uses environment variables for host, port, dbname, user, and password.
     The cursor_factory is set to RealDictCursor for dict-like fetches.
 
-    :return: psycopg2 connection object
+    Returns: psycopg2 connection object
     """
     return psycopg2.connect(
         host=os.getenv('DB_HOST'),
@@ -50,56 +51,77 @@ def get_db_connection():
     )
 
 
+def get_user_id_from_cookie():
+    """
+    Retrieve the user ID from a signed cookie.
+
+    Returns:
+        str or None: User ID if present and valid, otherwise None.
+    """
+    return request.get_cookie('user_id', secret=SECRET_KEY)
+
+
+def get_username_by_id(user_id):
+    """
+    Fetch the username associated with a given user ID from the database.
+
+    Args:
+        user_id (str): The user's ID.
+
+    Returns:
+        str or None: Username if found, otherwise None.
+    """
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+            row = cur.fetchone()
+            if row:
+                return row['username']
+    return None
+
+
 @route('/')
 def index():
     """
-    Render the home page.
+    Handle GET request to render the home page.
 
-    Query parameters:
-        login=1   -> show welcome alert
-        logout=1  -> show logout confirmation
+    Responsibilities:
+    - Check for login/logout query parameters to control alert display.
+    - Attempt to identify logged-in user via cookie and database lookup.
+    - Render the index template with appropriate data.
 
-    If user is logged in (cookie present), look up username.
+    Query Parameters:
+        login=1   -> display welcome message
+        logout=1  -> display logout confirmation
 
-    :return: rendered index template
+    Returns:
+        str: Rendered HTML content of the index page.
     """
-    recipes = []  # no search results on GET
+    # No recipes are shown on initial GET request
+    recipes = []
+
+    # Detect whether to show login/logout alerts
     login_success = request.query.login == '1'
     logout_success = request.query.logout == '1'
 
-    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
-    username = None
-    if user_id:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT username FROM users WHERE id = %s", (user_id,)
-                )
-                row = cur.fetchone()
-                if row:
-                    username = row['username']
+    # Try to get user information from cookie and database
+    user_id = get_user_id_from_cookie()
+    username = get_username_by_id(user_id) if user_id else None
 
+    # Render and return the index page with relevant context
     return template(
-    'index',
-    recipes=recipes,
-    login_success=login_success,
-    logout_success=logout_success,
-    login_error=None,
-    username=username,
-    no_results=False,
-    email=None
+        'index',
+        recipes=recipes,
+        login_success=login_success,
+        logout_success=logout_success,
+        login_error=None,
+        username=username,
+        no_results=False,
+        email=None
     )
 
-@route('/', method='POST')
-def get_recipes():
-    """
-    Handle recipe search form submission using diet + ingredients.
-    Fetches recipes from Spoonacular API and filters based on diet manually.
-    """
-    ingredients = request.forms.get('ingredients', '').strip()
-    diet = request.forms.get('diet', '').strip().lower()
-
-    # Base API URL
+def fetch_recipes_from_api(ingredients, diet):
+    """Send request to Spoonacular API with ingredients and diet parameters."""
     url = 'https://api.spoonacular.com/recipes/complexSearch'
     params = {
         'apiKey': API_KEY,
@@ -107,99 +129,114 @@ def get_recipes():
         'addRecipeInformation': True,
         'fillIngredients': True
     }
-
-    # Optional query parameters
     if ingredients:
         params['query'] = ingredients
     if diet:
         params['diet'] = diet
 
-    # Fetch basic recipe list
     resp = requests.get(url, params=params)
-    print("STATUSKOD:", resp.status_code)
-    print("SVAR:", resp.text)
+    if resp.status_code != 200:
+        return []
 
-    data = resp.json() if resp.status_code == 200 else {}
-    results = data.get('results', [])
+    data = resp.json()
+    return data.get('results', [])
 
+def is_recipe_valid(info, diet):
+    """Determine if a recipe matches the selected diet."""
+    title = info.get('title', '').lower()
+    ingredients = [i['name'].lower() for i in info.get('extendedIngredients', [])]
+
+    meat = ['chicken', 'beef', 'pork', 'bacon', 'turkey', 'ham', 'lamb']
+    dairy_egg = ['cheese', 'egg', 'milk', 'butter', 'yogurt', 'cream', 'honey']
+
+    if diet == "vegetarian":
+        return not any(w in title or any(w in ing for ing in ingredients) for w in meat)
+    if diet == "vegan":
+        return not any(w in title or any(w in ing for ing in ingredients) for w in meat + dairy_egg)
+    return True
+
+def get_detailed_recipe(recipe_id):
+    """Fetch detailed recipe info including nutrition and steps."""
+    url = f"https://api.spoonacular.com/recipes/{recipe_id}/information"
+    params = {'apiKey': API_KEY, 'includeNutrition': True}
+
+    resp = requests.get(url, params=params)
+    return resp.json() if resp.status_code == 200 else None
+
+
+def extract_recipe_data(summary, info):
+    """Build the recipe dictionary used by the frontend."""
+    nutrition = info.get('nutrition', {}).get('nutrients', [])
+    kcal = next((n for n in nutrition if n['name'] == 'Calories'), None)
+    kcal_str = f"{kcal['amount']} {kcal['unit']}" if kcal else 'Information missing'
+
+    time = info.get('readyInMinutes', 0)
+    difficulty = 'Easy' if time < 30 else 'Mid' if time < 60 else 'Hard'
+
+    steps = info.get('analyzedInstructions', [])
+    if steps and steps[0].get('steps'):
+        instructions = "<ol>" + "".join(f"<li>{step['step']}</li>" for step in steps[0]['steps']) + "</ol>"
+    else:
+        instructions = info.get('instructions', 'No instructions provided.')
+
+    return {
+        'id': summary['id'],
+        'title': summary['title'],
+        'image': summary['image'],
+        'readyInMinutes': time,
+        'servings': info.get('servings', 'Unknown'),
+        'nutrition': kcal_str,
+        'difficulty': difficulty,
+        'instructions': instructions
+    }
+
+@route('/', method='POST')
+def get_recipes():
+    """
+    Handle recipe search POST request using ingredients and diet input.
+    
+    This function:
+    - Retrieves form input from the user
+    - Queries Spoonacular API for matching recipes
+    - Applies manual filtering for vegetarian/vegan diets
+    - Fetches and formats detailed recipe data
+    - Displays results or an appropriate message if no recipes are found
+
+    Returns:
+        str: Rendered HTML of the index page
+    """
+    ingredients = request.forms.get('ingredients', '').strip()
+    diet = request.forms.get('diet', '').strip().lower()
+
+    raw_results = fetch_recipes_from_api(ingredients, diet)
     recipes = []
 
-    # Define keywords for dietary filtering
-    meat_words = ['chicken', 'beef', 'pork', 'bacon', 'turkey', 'ham', 'lamb']
-    dairy_egg_words = ['cheese', 'egg', 'milk', 'butter', 'yogurt', 'cream', 'honey']
-
-    for r in results:
-        # Make a detailed API call for each recipe to get nutrition and steps
-        info_url = f"https://api.spoonacular.com/recipes/{r['id']}/information"
-        info_params = {'apiKey': API_KEY, 'includeNutrition': True}
-        info_resp = requests.get(info_url, params=info_params)
-
-        if info_resp.status_code != 200:
+    for r in raw_results:
+        info = get_detailed_recipe(r['id'])
+        if not info:
             continue
-
-        info = info_resp.json()
-
-        # Extract ingredients list and title
-        title = r['title'].lower()
-        ingredients_list = [i['name'].lower() for i in info.get('extendedIngredients', [])]
-
-        # Filter recipes based on diet manually
-        if diet == "vegetarian" and any(word in title or any(word in ing for ing in ingredients_list) for word in meat_words):
+        if not is_recipe_valid(info, diet):
             continue
-        if diet == "vegan" and any(word in title or any(word in ing for ing in ingredients_list) for word in meat_words + dairy_egg_words):
-            continue
+        recipes.append(extract_recipe_data(r, info))
 
-        # Extract calories
-        nutrition = info.get('nutrition', {}).get('nutrients', [])
-        kcal = next((n for n in nutrition if n['name'] == 'Calories'), None)
-        kcal_str = f"{kcal['amount']} {kcal['unit']}" if kcal else 'Information saknas'
-
-        # Determine difficulty based on time
-        time = info.get('readyInMinutes', 0)
-        difficulty = 'Lätt' if time < 30 else 'Medel' if time < 60 else 'Svår'
-
-        # Fetch step-by-step instructions
-        steps = info.get('analyzedInstructions', [])
-        if steps and steps[0].get('steps'):
-            instructions = "<ol>" + "".join(f"<li>{step['step']}</li>" for step in steps[0]['steps']) + "</ol>"
-        else:
-            instructions = info.get('instructions', 'Instruktioner saknas.')
-
-        # Add recipe to final list
-        recipes.append({
-            'id': r['id'],
-            'title': r['title'],
-            'image': r['image'],
-            'readyInMinutes': time,
-            'servings': info.get('servings', 'Okänt'),
-            'nutrition': kcal_str,
-            'difficulty': difficulty,
-            'instructions': instructions
-        })
-
-    # No results message
     no_results = len(recipes) == 0
-    no_results_message = ""
+
+    # Build user feedback message for no results
     if no_results:
         if ingredients and diet:
-            no_results_message = f"Inga recept hittades som både innehåller '{ingredients}' och är '{diet}'."
+            msg = f"No recipes found containing '{ingredients}' and matching '{diet}' diet."
         elif ingredients:
-            no_results_message = f"Inga recept hittades med ingrediensen '{ingredients}'."
+            msg = f"No recipes found with ingredient '{ingredients}'."
         elif diet:
-            no_results_message = f"Inga recept hittades för dieten '{diet}'."
+            msg = f"No recipes found for the '{diet}' diet."
         else:
-            no_results_message = "Inga recept hittades."
+            msg = "No recipes found."
+    else:
+        msg = ""
 
-    # Check login status
-    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
-    username = None
-    if user_id:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT username FROM users WHERE id = %s", (user_id,))
-                row = cur.fetchone()
-                if row:
-                    username = row['username']
+    # Check for logged-in user
+    user_id = get_user_id_from_cookie()
+    username = get_username_by_id(user_id) if user_id else None
 
     # Render index template
     return template(
@@ -210,11 +247,9 @@ def get_recipes():
         login_error=None,
         username=username,
         no_results=no_results,
-        no_results_message=no_results_message,
+        no_results_message=msg,
         email=None
     )
-
-
 
 @route('/register', method=['GET', 'POST'])
 def register():
@@ -225,7 +260,7 @@ def register():
     POST: process form data, validate input, hash password,
           insert new user into database.
 
-    :return: rendered register template with status message
+    Returns: rendered register template with status message
     """
     error = None
     success = None
@@ -276,7 +311,7 @@ def login():
 
     Sets cookie and redirects to home with login confirmation.
 
-    :return: redirect or rendered template on failure
+    Returns: redirect or rendered template on failure
     """
     email = request.forms.get('email', '').strip().lower()
     password_raw = request.forms.get('password', '').encode('utf-8')
@@ -328,7 +363,7 @@ def add_favorite():
     Add a recipe to the user's favorites.
 
     Expects recipe_id, title, and image in form data.
-    Returns JSON {'ok': True/False} or HTTP error.
+    Returns: JSON {'ok': True/False} or HTTP error.
     """
     user_id = request.get_cookie('user_id', secret=SECRET_KEY)
     if not user_id:
@@ -336,7 +371,7 @@ def add_favorite():
             status=401, body=json.dumps({'ok': False, 'error': 'Not logged in'})
         )
 
-    #Hämta all data från formuläret
+    #Fetch all data from the form
     recipe_id = request.forms.get('recipe_id')
     title = request.forms.get('title')
     image = request.forms.get('image')

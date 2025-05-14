@@ -1,11 +1,15 @@
+// Handle custom diet filter chips and set selected diet for form submission
+
 document.addEventListener("DOMContentLoaded", function () {
   const chipArea = document.getElementById("chip-area");
   const inputField = document.getElementById("ingredients-input");
-  const dietInput = document.getElementById("selected-diet"); // ← lägg till hidden input i HTML
+  const dietInput = document.getElementById("selected-diet"); // ← hidden input to pass selected diet
   const selectedFilters = new Set();
 
+  // Clear the input field initially
   inputField.value = "";
 
+  // When a diet tag is clicked, create a removable chip
   document.querySelectorAll('.filter-tags span').forEach(tag => {
     tag.addEventListener('click', () => {
       const value = tag.dataset.text;
@@ -22,6 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
         chip.remove();
         selectedFilters.delete(value.toLowerCase());
 
+        // Uncheck corresponding radio button when chip is removed
         document.querySelectorAll('.filter-tags input[type="radio"]').forEach(r => {
           if (r.value.toLowerCase() === value.toLowerCase()) r.checked = false;
         });
@@ -31,19 +36,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // On form submit, assign selected diet to hidden input
   document.querySelector('.find-recipe-btn').addEventListener('click', () => {
     const ingredients = inputField.value;
     const diets = Array.from(selectedFilters);
 
     if (dietInput) {
-      dietInput.value = diets[0] || ''; // Spoonacular tillåter endast en diet
+      dietInput.value = diets[0] || ''; // Only one diet allowed by Spoonacular API
     }
 
-    console.log('Formdata som skickas:', {
+    console.log('Submitted form data:', {
       ingredients: ingredients,
       diet: dietInput.value
     });
 
-    // formuläret skickas automatiskt (ingen preventDefault behövs)
+    // Form submission proceeds normally
   });
 });
