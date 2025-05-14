@@ -1,307 +1,251 @@
-/* GLOBAL */
+/* GLOBAL STYLES */
 body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background-color: bisque;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  
-  /* TOP BAR */
-  .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 10px;
-    background-color: transparent; 
-    box-shadow: none;
-    z-index: 10;
-  }
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: bisque;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-  .top-bar .home-icon img {
-    max-width: 80px;
-    height: auto;
-    display: block;
-    transition: transform 0.2s;
-  }
+/* HEADER / TOP BAR */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  background-color: transparent;
+  box-shadow: none;
+  z-index: 10;
+}
 
-  .top-bar .home-icon img:hover {
-    transform: scale(1.05);
-    cursor: pointer;
-  }
+.top-bar .home-icon img {
+  max-width: 80px;
+  height: auto;
+  display: block;
+  transition: transform 0.2s;
+}
 
-  .top-bar .top-right-icons {
-    display: flex;
-    gap: 20px;
-  }
+.top-bar .home-icon img:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
 
-  .top-bar .top-right-icons a {
-    font-size: 24px;
-    color: black;
-    text-decoration: none;
-    transition: color 0.2s;
-  }
+.top-bar .top-right-icons {
+  display: flex;
+  gap: 20px;
+}
 
-  .top-bar .top-right-icons a:hover {
-    color: #f48c06;
-  }
-  
-  /* MAIN CONTENT */
-  .center-wrapper {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start; 
-    text-align: center;
-    padding: 0.5rem 1rem 2rem;
-    box-sizing: border-box;
-  }
+.top-bar .top-right-icons a {
+  font-size: 24px;
+  color: black;
+  text-decoration: none;
+  transition: color 0.2s;
+}
 
-  .container {
-    max-width: 960px;
-    width: 100%;
-    margin: 0 auto;
-  }
-  
-  /* HEADLINE */
-  .headline h1 {
-    font-family: 'Georgia', serif;
-    font-size: 3rem;
-    margin: 0;
-  }
+.top-bar .top-right-icons a:hover {
+  color: #f48c06;
+}
 
-  .headline p {
-    font-size: 1.2rem;
-    font-style: italic;
-    color: #666;
-    margin: 0 0 3rem; 
-  }
-  
-  /* SEARCH */
-  .search-section {
-    margin-top: 3rem;
-  }
+/* MAIN CONTENT WRAPPER */
+.center-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: 0.5rem 1rem 2rem;
+  box-sizing: border-box;
+}
 
-  .search-section h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
+.container {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+}
 
-  .search-form {
-    display: flex;
-    justify-content: flex-start; 
-    gap: 1rem;
-    margin-left: 300px;    
-  }
+/* HEADLINE SECTION */
+.headline h1 {
+  font-family: 'Georgia', serif;
+  font-size: 3rem;
+  margin: 0;
+}
 
-  .search-form input.form-control {
-    flex: 1;
-    min-width: 200px;
-    padding: 10px;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-  }
+.headline p {
+  font-size: 1.2rem;
+  font-style: italic;
+  color: #666;
+  margin: 0 0 3rem;
+}
 
-  .search-form .btn-warning {
-    background-color: #f48c06;
-    border: none;
-    transition: background-color 0.2s;
-  }
+/* SEARCH SECTION */
+.search-section {
+  margin-top: 3rem;
+}
 
-  .search-form .btn-warning:hover {
-    background-color: #e07b00;
-  }
-  
-  /* RECIPE CARDS */
-  .card {
-    border-radius: 0.75rem;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    will-change: transform;
-  }
+.search-form {
+  display: flex;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-left: 300px;
+}
 
-  .card-img-top {
-    height: 180px;
-    object-fit: cover;
-  }
+.search-form input.form-control {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+}
 
-  .card .btn-warning {
-    background-color: #f48c06;
-    border: none;
-  }
-
-  .card .btn-warning:hover {
-    background-color: #e07b00;
-  }
-  
-  .card:hover {
-    transform: scale(1.05); /* 1.2 kan bli för mycket i grid */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    z-index: 10; /* så att det lägger sig över andra kort */
-    position: relative;
-  }
-
-  .favorite-star {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    width: 2.2rem;
-    height: 2.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: gold;
-    transition: transform 0.1s ease;
-  }
-  
-  .favorite-star:hover {
-    transform: scale(1.2);
-  }
-
-  .trash-button {
-    background: transparent;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    font-size: 20px;
-    transition: transform 0.2s ease;
-    color: #333;
-  }
-  
-  .trash-button:hover {
-    transform: scale(1.2);
-    color: #c0392b; 
-  }
-  
-  .trash-button:focus {
-    outline: none;
-  }
-  
-  .no-results-message {
-    background-color: #fff1e6;
-    border: 1px solid #f48c06;
-    color: #333;
-    padding: 1rem 1.5rem;
-    border-radius: 0.75rem;
-    font-weight: 500;
-    text-align: center;
-    margin-top: 2rem;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    font-size: 1.1rem;
-  }
-  
-  .search-bar {
-    width: 900px;
-    display: flex;
-    align-items: center;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 50px;
-    padding: 0.5rem 1rem;
-    min-height: 50px;
-  }
-  
-
-  .search-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    width: 100%;
-    max-width: none;
-  }   
-  
-  .input-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-
-  .chip-area {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: nowrap;
-    align-items: center;
-  }
-  
-  .chip-input {
-    flex-grow: 1;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    background: transparent;
-  }  
-  
-  .chip {
-    background-color: #f48c06;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background-color 0.2s;
-  }
-  
-  .chip:hover {
-    background-color: #e07b00;
-  }
-  
-  .chip .remove-chip {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.1rem;
-    cursor: pointer;
-    line-height: 1;
-  }
-
-  .search-bar .btn-warning {
-    border-radius: 0 50px 50px 0;
-    padding: 0.8rem 1.5rem;
-    background-color: #f48c06;
-    color: white;
-    font-weight: bold;
-    border: none;
-    transition: background-color 0.2s;
-  }
-
+.search-form .btn-warning,
+.card .btn-warning,
+.search-bar .btn-warning,
 .find-recipe-btn {
-    padding: 0.8rem 1.5rem;
-    background-color: #f48c06;
-    color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 20px;
-    white-space: nowrap;
-    margin-left: 1rem; /* Avstånd från sökfältet */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s, box-shadow 0.2s;
+  background-color: #f48c06;
+  border: none;
+  color: white;
+  font-weight: bold;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  border-radius: 70px;
 }
-  
-  
+
+.search-form .btn-warning:hover,
+.card .btn-warning:hover,
+.search-bar .btn-warning:hover,
 .find-recipe-btn:hover {
-    background-color: #e07b00;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  background-color: #e07b00;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
-  
-  
- /* Chips-style tags under sökrutan */
+
+/* RECIPE CARD STYLING */
+.card {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.card-img-top {
+  height: 180px;
+  object-fit: cover;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  position: relative;
+}
+
+/* BUTTONS */
+.favorite-star,
+.trash-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  transition: transform 0.2s ease, color 0.2s;
+  color: gold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-star:hover,
+.trash-button:hover {
+  transform: scale(1.2);
+  color: #c0392b;
+}
+
+.no-results-message {
+  background-color: #fff1e6;
+  border: 1px solid #f48c06;
+  color: #333;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-size: 1.1rem;
+}
+
+/* SEARCH BAR */
+.search-bar {
+  width: 900px;
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  min-height: 50px;
+}
+
+.search-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.chip-area {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.chip-input {
+  flex-grow: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: transparent;
+}
+
+.chip {
+  background-color: #f48c06;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.chip:hover {
+  background-color: #e07b00;
+}
+
+.chip .remove-chip {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* DIET TAG BUTTONS */
 .filter-tags {
   display: flex;
   flex-wrap: wrap;
