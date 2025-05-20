@@ -120,8 +120,8 @@ def index():
         email=None
     )
 
-def fetch_recipes_from_api(ingredients, diet):
-    """Send request to Spoonacular API with ingredients and diet parameters."""
+def fetch_recipes_from_api(ingredients, diet, max_calories=None, max_ready_time=None):
+    """Send request to Spoonacular API with ingredients, diet and optional filters."""
     url = 'https://api.spoonacular.com/recipes/complexSearch'
     params = {
         'apiKey': API_KEY,
@@ -133,13 +133,16 @@ def fetch_recipes_from_api(ingredients, diet):
         params['query'] = ingredients
     if diet:
         params['diet'] = diet
+    if max_calories:
+        params['maxCalories'] = max_calories
+    if max_ready_time:
+        params['maxReadyTime'] = max_ready_time
 
     resp = requests.get(url, params=params)
     if resp.status_code != 200:
         return []
+    return resp.json().get('results', [])
 
-    data = resp.json()
-    return data.get('results', [])
 
 def is_recipe_valid(info, diet):
     """Determine if a recipe matches the selected diet."""
@@ -193,52 +196,90 @@ def extract_recipe_data(summary, info):
 @route('/', method='POST')
 def get_recipes():
     """
-    Handle recipe search POST request using ingredients and diet input.
-    
+    Handle recipe search POST request using ingredients, diet, max calories and max time.
+
     This function:
-    - Retrieves form input from the user
-    - Queries Spoonacular API for matching recipes
-    - Applies manual filtering for vegetarian/vegan diets
+    - Retrieves form inputs from the user
+    - Queries the Spoonacular API for matching recipes
+    - Applies manual filtering for calories, ready time, and dietary restrictions
     - Fetches and formats detailed recipe data
-    - Displays results or an appropriate message if no recipes are found
+    - Renders the index page with results or an appropriate message if no recipes are found
 
     Returns:
         str: Rendered HTML of the index page
     """
+    # Read basic search inputs
     ingredients = request.forms.get('ingredients', '').strip()
     diet = request.forms.get('diet', '').strip().lower()
 
-    raw_results = fetch_recipes_from_api(ingredients, diet)
+    # Read optional filters from the form
+    max_calories_input = request.forms.get('max_calories', '').strip()
+    max_time_input = request.forms.get('max_time', '').strip()
+
+    # Convert filter values to integers if valid, otherwise set to None
+    max_calories = int(max_calories_input) if max_calories_input.isdigit() else None
+    max_time = int(max_time_input) if max_time_input.isdigit() else None
+
+    # Fetch raw recipe list from the API with optional filters
+    raw_results = fetch_recipes_from_api(ingredients, diet, max_calories, max_time)
     recipes = []
 
     for r in raw_results:
         info = get_detailed_recipe(r['id'])
         if not info:
+            # Skip if we couldn't retrieve detailed info
             continue
+
+        # Extract calorie and ready-in data
+        kcal_data = next(
+            (n for n in info.get('nutrition', {}).get('nutrients', [])
+             if n['name'] == 'Calories'),
+            None
+        )
+        calories = kcal_data['amount'] if kcal_data else None
+        ready_in = info.get('readyInMinutes', 0)
+
+        # Manual filter: max calories
+        if max_calories is not None and calories is not None and calories > max_calories:
+            continue
+
+        # Manual filter: max ready time
+        if max_time is not None and ready_in > max_time:
+            continue
+
+        # Manual filter: dietary restrictions (vegetarian/vegan/etc.)
         if not is_recipe_valid(info, diet):
             continue
+
+        # If all checks pass, format and add to the results list
         recipes.append(extract_recipe_data(r, info))
 
     no_results = len(recipes) == 0
 
-    # Build user feedback message for no results
+    # Build the feedback message when no recipes were found
     if no_results:
-        if ingredients and diet:
-            msg = f"No recipes found containing '{ingredients}' and matching '{diet}' diet."
-        elif ingredients:
-            msg = f"No recipes found with ingredient '{ingredients}'."
-        elif diet:
-            msg = f"No recipes found for the '{diet}' diet."
+        criteria = []
+        if ingredients:
+            criteria.append(f"ingredient '{ingredients}'")
+        if diet:
+            criteria.append(f"diet '{diet}'")
+        if max_calories is not None:
+            criteria.append(f"max {max_calories} kcal")
+        if max_time is not None:
+            criteria.append(f"max {max_time} min")
+
+        if criteria:
+            msg = "No recipes found matching " + ", ".join(criteria) + "."
         else:
             msg = "No recipes found."
     else:
         msg = ""
 
-    # Check for logged-in user
+    # Check if a user is logged in
     user_id = get_user_id_from_cookie()
     username = get_username_by_id(user_id) if user_id else None
 
-    # Render index template
+    # Render the index.html template with all necessary context
     return template(
         'index',
         recipes=recipes,
@@ -250,6 +291,8 @@ def get_recipes():
         no_results_message=msg,
         email=None
     )
+
+
 
 @route('/register', method=['GET', 'POST'])
 def register():
