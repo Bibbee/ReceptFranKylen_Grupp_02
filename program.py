@@ -120,8 +120,8 @@ def index():
         email=None
     )
 
-def fetch_recipes_from_api(ingredients, diet):
-    """Send request to Spoonacular API with ingredients and diet parameters."""
+def fetch_recipes_from_api(ingredients, diet, max_calories=None, max_ready_time=None):
+    """Send request to Spoonacular API with ingredients, diet and optional filters."""
     url = 'https://api.spoonacular.com/recipes/complexSearch'
     params = {
         'apiKey': API_KEY,
@@ -133,13 +133,16 @@ def fetch_recipes_from_api(ingredients, diet):
         params['query'] = ingredients
     if diet:
         params['diet'] = diet
+    if max_calories:
+        params['maxCalories'] = max_calories
+    if max_ready_time:
+        params['maxReadyTime'] = max_ready_time
 
     resp = requests.get(url, params=params)
     if resp.status_code != 200:
         return []
+    return resp.json().get('results', [])
 
-    data = resp.json()
-    return data.get('results', [])
 
 def is_recipe_valid(info, diet):
     """Determine if a recipe matches the selected diet."""
@@ -190,55 +193,124 @@ def extract_recipe_data(summary, info):
         'instructions': instructions
     }
 
+def parse_search_filters(forms):
+    """
+    Parse search-related filters from request forms.
+
+    Returns a dict with keys:
+      - ingredients (str)
+      - diet (str)
+      - max_calories (int or None)
+      - max_time (int or None)
+      - difficulty (str or None)
+    """
+    ingredients = forms.get('ingredients', '').strip()
+    diet = forms.get('diet', '').strip().lower()
+
+    max_calories_input = forms.get('max_calories', '').strip()
+    max_time_input = forms.get('max_time', '').strip()
+    difficulty_input = forms.get('difficulty', '').strip().capitalize()
+
+    max_calories = int(max_calories_input) if max_calories_input.isdigit() else None
+    max_time = int(max_time_input)     if max_time_input.isdigit()     else None
+    difficulty = difficulty_input if difficulty_input in ('Easy', 'Mid', 'Hard') else None
+
+    return {
+        'ingredients': ingredients,
+        'diet': diet,
+        'max_calories': max_calories,
+        'max_time': max_time,
+        'difficulty': difficulty
+    }
+
+
+def should_include_recipe(info, diet, max_calories, max_time, difficulty):
+    """
+    Determine if a detailed recipe should be included based on all filters.
+    """
+    # Calorie and time extraction
+    nutrition = info.get('nutrition', {}).get('nutrients', [])
+    kcal_data = next((n for n in nutrition if n['name'] == 'Calories'), None)
+    calories = kcal_data['amount'] if kcal_data else None
+    ready_in = info.get('readyInMinutes', 0)
+
+    # Difficulty classification
+    current_difficulty = 'Easy' if ready_in < 30 else 'Mid' if ready_in < 60 else 'Hard'
+
+    # Apply filters
+    if max_calories is not None and calories is not None and calories > max_calories:
+        return False
+    if max_time is not None and ready_in > max_time:
+        return False
+    if difficulty is not None and current_difficulty != difficulty:
+        return False
+    if not is_recipe_valid(info, diet):
+        return False
+
+    return True
+
+
+def build_no_results_message(filters):
+    """
+    Build a feedback message when no recipes match the given filters.
+    """
+    criteria = []
+    if filters['ingredients']:
+        criteria.append(f"ingredient '{filters['ingredients']}'")
+    if filters['diet']:
+        criteria.append(f"diet '{filters['diet']}'")
+    if filters['max_calories'] is not None:
+        criteria.append(f"max {filters['max_calories']} kcal")
+    if filters['max_time'] is not None:
+        criteria.append(f"max {filters['max_time']} min")
+    if filters['difficulty'] is not None:
+        criteria.append(f"difficulty '{filters['difficulty']}'")
+
+    if criteria:
+        return "No recipes found matching " + ", ".join(criteria) + "."
+    return "No recipes found."
+
+
+# --- Refactored route handler ---
 @route('/', method='POST')
 def get_recipes():
     """
-    Handle recipe search POST request using ingredients and diet input.
-    
-    This function:
-    - Retrieves form input from the user
-    - Queries Spoonacular API for matching recipes
-    - Applies manual filtering for vegetarian/vegan diets
-    - Fetches and formats detailed recipe data
-    - Displays results or an appropriate message if no recipes are found
-
-    Returns:
-        str: Rendered HTML of the index page
+    Handle recipe search with single-responsibility breakdown.
     """
-    ingredients = request.forms.get('ingredients', '').strip()
-    diet = request.forms.get('diet', '').strip().lower()
+    # 1) Parse filters
+    filters = parse_search_filters(request.forms)
 
-    raw_results = fetch_recipes_from_api(ingredients, diet)
+    # 2) Fetch raw list from API
+    raw_results = fetch_recipes_from_api(
+        filters['ingredients'],
+        filters['diet'],
+        filters['max_calories'],
+        filters['max_time']
+    )
+
+    # 3) Filter and format results
     recipes = []
-
-    for r in raw_results:
-        info = get_detailed_recipe(r['id'])
+    for summary in raw_results:
+        info = get_detailed_recipe(summary['id'])
         if not info:
             continue
-        if not is_recipe_valid(info, diet):
-            continue
-        recipes.append(extract_recipe_data(r, info))
+        if should_include_recipe(
+            info,
+            filters['diet'],
+            filters['max_calories'],
+            filters['max_time'],
+            filters['difficulty']
+        ):
+            recipes.append(extract_recipe_data(summary, info))
 
+    # 4) Determine outcome message
     no_results = len(recipes) == 0
+    no_results_message = build_no_results_message(filters) if no_results else ''
 
-    # Build user feedback message for no results
-    if no_results:
-        if ingredients and diet:
-            msg = f"No recipes found containing '{ingredients}' and matching '{diet}' diet."
-        elif ingredients:
-            msg = f"No recipes found with ingredient '{ingredients}'."
-        elif diet:
-            msg = f"No recipes found for the '{diet}' diet."
-        else:
-            msg = "No recipes found."
-    else:
-        msg = ""
-
-    # Check for logged-in user
+    # 5) Render template
     user_id = get_user_id_from_cookie()
     username = get_username_by_id(user_id) if user_id else None
 
-    # Render index template
     return template(
         'index',
         recipes=recipes,
@@ -247,7 +319,7 @@ def get_recipes():
         login_error=None,
         username=username,
         no_results=no_results,
-        no_results_message=msg,
+        no_results_message=no_results_message,
         email=None
     )
 

@@ -1,55 +1,132 @@
-// Handle custom diet filter chips and set selected diet for form submission
+// filters.js
+// Handles diet tags, filter application, and reliable filter submission
 
-document.addEventListener("DOMContentLoaded", function () {
-  const chipArea = document.getElementById("chip-area");
-  const inputField = document.getElementById("ingredients-input");
-  const dietInput = document.getElementById("selected-diet"); // ← hidden input to pass selected diet
-  const selectedFilters = new Set();
+document.addEventListener("DOMContentLoaded", () => {
+  // DOM elements
+  const form             = document.querySelector('form');
+  const ingredientsInput = document.getElementById('ingredients-input');
+  const dietInput        = document.getElementById('selected-diet');
+  const calSlider        = document.getElementById('max_calories');
+  const timeSlider       = document.getElementById('max_time');
+  const diffSelect       = document.getElementById('difficulty');
+  const applyBtn         = document.getElementById('apply-filters-btn');
+  const filterPanelEl    = document.getElementById('filterPanel');
+  const chipArea         = document.getElementById('chip-area');
 
-  // Clear the input field initially
-  inputField.value = "";
+  // State
+  let filtersApplied = false;
+  const selectedDiet = new Set();
 
-  // When a diet tag is clicked, create a removable chip
+  // Create hidden inputs for reliable submission
+  function createHidden(name) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    form.appendChild(input);
+    return input;
+  }
+  const hiddenMaxCalories = createHidden('max_calories');
+  const hiddenMaxTime     = createHidden('max_time');
+  const hiddenDifficulty  = createHidden('difficulty');
+
+  // Initialize Bootstrap Collapse for filter panel
+  const bsCollapse = new bootstrap.Collapse(filterPanelEl, { toggle: false });
+
+  // Add close button to top-right of panel
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'btn-close';
+  closeBtn.setAttribute('aria-label', 'Close filter panel');
+  closeBtn.addEventListener('click', () => bsCollapse.hide());
+  filterPanelEl.querySelector('.card-body')
+    .insertAdjacentElement('afterbegin', closeBtn);
+
+  // Diet tag click: create removable diet chip
   document.querySelectorAll('.filter-tags span').forEach(tag => {
     tag.addEventListener('click', () => {
-      const value = tag.dataset.text;
+      const diet = tag.dataset.text;
+      if (selectedDiet.has(diet)) return;
+      selectedDiet.add(diet);
+      // Update hidden diet
+      dietInput.value = diet;
 
-      if (selectedFilters.has(value.toLowerCase())) return;
-
-      selectedFilters.add(value.toLowerCase());
-
-      const chip = document.createElement("div");
-      chip.className = "chip";
-      chip.innerHTML = `${value} <button class="remove-chip" title="Remove">×</button>`;
-
-      chip.querySelector(".remove-chip").addEventListener("click", () => {
-        chip.remove();
-        selectedFilters.delete(value.toLowerCase());
-
-        // Uncheck corresponding radio button when chip is removed
-        document.querySelectorAll('.filter-tags input[type="radio"]').forEach(r => {
-          if (r.value.toLowerCase() === value.toLowerCase()) r.checked = false;
-        });
+      // Mark radio
+      document.querySelectorAll('.filter-tags input[type=radio]').forEach(r => {
+        if (r.value === diet) r.checked = true;
       });
 
+      // Create chip
+      const chip = document.createElement('div');
+      chip.className = 'chip diet-chip';
+      chip.textContent = diet + ' ';
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-chip';
+      removeBtn.title = 'Remove diet';
+      removeBtn.innerText = '×';
+      chip.appendChild(removeBtn);
       chipArea.appendChild(chip);
+
+      // Remove handler
+      removeBtn.addEventListener('click', () => {
+        chip.remove();
+        selectedDiet.delete(diet);
+        dietInput.value = '';
+        document.querySelectorAll('.filter-tags input[type=radio]').forEach(r => {
+          if (r.value === diet) r.checked = false;
+        });
+      });
     });
   });
 
-  // On form submit, assign selected diet to hidden input
-  document.querySelector('.find-recipe-btn').addEventListener('click', () => {
-    const ingredients = inputField.value;
-    const diets = Array.from(selectedFilters);
+  // Apply Filters button: capture slider/select values into hidden inputs
+  applyBtn.addEventListener('click', () => {
+    filtersApplied = true;
 
-    if (dietInput) {
-      dietInput.value = diets[0] || ''; // Only one diet allowed by Spoonacular API
-    }
+    // Remove old filter chips
+    document.querySelectorAll('.chip.filter-chip').forEach(c => c.remove());
 
-    console.log('Submitted form data:', {
-      ingredients: ingredients,
-      diet: dietInput.value
+    // Write to hidden
+    hiddenMaxCalories.value = calSlider.value;
+    hiddenMaxTime.value     = timeSlider.value;
+    hiddenDifficulty.value  = diffSelect.value;
+
+    // Create summary chip
+    const chip = document.createElement('div');
+    chip.className = 'chip filter-chip';
+    chip.textContent = `Filters: ≤${hiddenMaxCalories.value} kcal, ≤${hiddenMaxTime.value} min, ${hiddenDifficulty.value || 'Any'}` + ' ';
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-chip';
+    removeBtn.title = 'Remove filters';
+    removeBtn.innerText = '×';
+    chip.appendChild(removeBtn);
+    chipArea.appendChild(chip);
+
+    // Remove filters handler
+    removeBtn.addEventListener('click', () => {
+      chip.remove();
+      filtersApplied = false;
+      hiddenMaxCalories.value = '';
+      hiddenMaxTime.value     = '';
+      hiddenDifficulty.value  = '';
+      // Reset UI controls to defaults
+      calSlider.value = calSlider.defaultValue;
+      document.getElementById('calLabel').textContent = calSlider.defaultValue;
+      timeSlider.value = timeSlider.defaultValue;
+      document.getElementById('timeLabel').textContent = timeSlider.defaultValue;
+      diffSelect.value = '';
     });
 
-    // Form submission proceeds normally
+    // Collapse panel
+    bsCollapse.hide();
+  });
+
+  // Form submit: if filtersApplied false, clear hidden so backend ignores them
+  form.addEventListener('submit', () => {
+    if (!filtersApplied) {
+      hiddenMaxCalories.value = '';
+      hiddenMaxTime.value     = '';
+      hiddenDifficulty.value  = '';
+    }
+    // dietInput already set via diet tag clicks
   });
 });

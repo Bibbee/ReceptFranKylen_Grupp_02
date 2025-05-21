@@ -62,49 +62,123 @@
       <p>Turn fridge leftovers into tasty masterpieces!</p>
     </section>
 
-    <!-- SEARCH SECTION: modern layout with dynamic chips for ingredients input -->
-    <section class="search-section">
-      <form action="/" method="post" style="width: 100%;">
-        <div class="search-wrapper">
-          <div class="search-bar">
-            <div class="input-container">
-              <!-- Ingredients input: dynamically managed by filters.js -->
-              <input
-                type="text"
-                id="ingredients-input"
-                name="ingredients"
-                class="chip-input"
-                placeholder="Write your ingredients here..."
-                aria-label="Ingredients input"
-              />
-              <div class="chip-area" id="chip-area"></div>
-              <input type="hidden" name="diet" id="selected-diet">
-            </div>
-          </div>
-          <button type="submit" class="btn btn-warning find-recipe-btn">Find recipe</button>
-        </div>
-      </form>
-    </section>
+   <!-- SEARCH & FILTER SECTION -->
+<section class="search-section">
+  <form action="/" method="post" class="w-100">
 
-    <!-- FILTER TAGS: diet options update hidden diet input via filters.js -->
-    <section class="filter-tags mt-3">
-      <label>
-        <input type="radio" name="diet-radio" value="Vegetarian">
-        <span data-text="Vegetarian">Vegetarian</span>
-      </label>
-      <label>
-        <input type="radio" name="diet-radio" value="Vegan">
-        <span data-text="Vegan">Vegan</span>
-      </label>
-      <label>
-        <input type="radio" name="diet-radio" value="Gluten-free">
-        <span data-text="Gluten-free">Gluten-Free</span>
-      </label>
-      <label>
-        <input type="radio" name="diet-radio" value="Ketogenic">
-        <span data-text="Ketogenic">Ketogenic</span>
-      </label>
-    </section>
+    <!-- 1) SEARCH FIELD + SUBMIT -->
+    <div class="d-flex mb-3">
+      <div class="flex-grow-1 me-2">
+        <div class="search-bar">
+          <div class="input-container">
+            <input
+              type="text"
+              id="ingredients-input"
+              name="ingredients"
+              class="chip-input form-control"
+              placeholder="Write your ingredients here..."
+              aria-label="Ingredients input"
+            />
+            <div class="chip-area" id="chip-area"></div>
+            <!-- Hidden field that receives the selected diet from JS -->
+            <input type="hidden" name="diet" id="selected-diet">
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-warning find-recipe-btn">
+        Find recipe
+      </button>
+    </div>
+
+    <!-- 2) FILTER BUTTON + DIET TAGS -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+      <!-- Filter button -->
+      <button
+        class="btn btn-outline-secondary btn-sm me-3 filter-tags"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#filterPanel"
+        aria-expanded="false"
+        aria-controls="filterPanel">
+        <i class="fas fa-filter"></i> Filter
+      </button>
+
+      <!-- Diet tags -->
+      <div class="filter-tags d-flex gap-2">
+        <label>
+          <input type="radio" name="diet-radio" value="Vegetarian">
+          <span data-text="Vegetarian">Vegetarian</span>
+        </label>
+        <label>
+          <input type="radio" name="diet-radio" value="Vegan">
+          <span data-text="Vegan">Vegan</span>
+        </label>
+        <label>
+          <input type="radio" name="diet-radio" value="Gluten Free">
+          <span data-text="Gluten Free">Gluten Free</span>
+        </label>
+        <label>
+          <input type="radio" name="diet-radio" value="Ketogenic">
+          <span data-text="Ketogenic">Ketogenic</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 3) COLLAPSIBLE FILTER PANEL -->
+    <div class="collapse mb-4" id="filterPanel">
+      <div class="card card-body border-warning">
+
+        <div class="row gy-3">
+          <!-- Slider: Max calories -->
+          <div class="col-12 col-md-6">
+            <label for="max_calories" class="form-label">
+              Max kcal: <span id="calLabel">500</span>
+            </label>
+            <input
+              type="range"
+              class="form-range"
+              id="max_calories"
+              name="max_calories"
+              min="0" max="2000" value="500"
+              oninput="calLabel.textContent = this.value"/>
+          </div>
+
+          <!-- Slider: Max time -->
+          <div class="col-12 col-md-6">
+            <label for="max_time" class="form-label">
+              Max minutes: <span id="timeLabel">30</span>
+            </label>
+            <input
+              type="range"
+              class="form-range"
+              id="max_time"
+              name="max_time"
+              min="0" max="120" value="30"
+              oninput="timeLabel.textContent = this.value"/>
+          </div>
+
+          <!-- Select: Difficulty -->
+          <div class="col-12">
+            <label for="difficulty" class="form-label">Difficulty</label>
+            <select id="difficulty" name="difficulty" class="form-select">
+              <option value="">None</option>
+              <option value="Easy">Easy</option>
+              <option value="Mid">Mid</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+          <div class="d-flex justify-content-end mt-3">
+            <button type="button" id="apply-filters-btn" class="btn btn-primary btn-sm">
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</section>
+
 
     <!-- RECIPE RESULTS: display message or loop through recipe cards -->
     % if no_results:
