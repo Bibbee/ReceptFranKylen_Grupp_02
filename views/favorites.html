@@ -12,26 +12,55 @@
 <body>
 
   <!-- HEADER: Navigation bar reused across pages -->
-  <header class="top-bar d-flex justify-content-between align-items-center py-3">
-    <a href="/" class="home-icon">
-      <img src="/static/images/chef-logo.png" alt="Home page logo">
+<header class="top-bar d-flex justify-content-between align-items-center py-3 position-relative">
+  <!-- Home-icon -->
+  <a href="/" class="home-icon">
+    <img src="/static/images/chef-logo.png" alt="Home page logo" class="chefs-icon">
+  </a>
+
+  <div class="d-flex align-items-center gap-4">
+    <a href="/favorites" class="text-dark fs-4" title="Favorites">
+      <i class="fas fa-star"></i>
     </a>
-    <div class="d-flex align-items-center gap-4">
-      <a href="/favorites" class="text-dark fs-4" title="Favorites"><i class="fas fa-star"></i></a>
-      <a href="/settings" class="text-dark fs-4" title="Settings"><i class="fas fa-cog"></i></a>
-      <div class="dropdown">
-        <a href="#" class="text-dark fs-4" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">
-          <i class="fas fa-user"></i>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+
+    <a href="javascript:void(0)"
+       id="settingsTrigger"
+       class="text-dark fs-4"
+       title="Settings">
+      <i class="fas fa-cog"></i>
+    </a>
+
+    <!-- Profile-dropdown -->
+    <div class="dropdown">
+      <a href="#"
+         class="text-dark fs-4"
+         id="profileDropdown"
+         data-bs-toggle="dropdown"
+         aria-expanded="false"
+         title="Profile">
+        <i class="fas fa-user"></i>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+        % if username:
+          <li><a class="dropdown-item" href="/logout">Log out</a></li>
+        % else:
           <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a></li>
           <li><a class="dropdown-item" href="/register">Register</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="/logout">Log out</a></li>
-        </ul>
-      </div>
+        % end
+      </ul>
     </div>
-  </header>
+  </div>
+
+  <!-- Hidden settings for toggle option -->
+  <div id="settings-panel"
+       class="d-none position-absolute bg-white border rounded shadow-sm p-3">
+    <div class="form-check form-switch mb-0">
+      <input class="form-check-input" type="checkbox" id="darkModeToggle">
+      <label class="form-check-label" for="darkModeToggle">☀️/🌙 Mode</label>
+    </div>
+  </div>
+</header>
+
 
   <!-- MAIN TITLE -->
   <main class="center-wrapper container d-flex flex-column justify-content-start text-center">
@@ -141,6 +170,7 @@
           <p><strong>Instructions:</strong></p>
           <p id="recipeModalInstructions" class="text-start"></p>
         </div>
+        <script src="/static/js/settings.js"></script>
         <script src="/static/js/RecipeModal.js"></script>
       </div>
     </div>

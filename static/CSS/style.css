@@ -126,8 +126,6 @@ body {
   width: 220px !important;
 }
 
-
-
 /* RECIPE CARD STYLING */
 .card {
   border-radius: 0.75rem;
@@ -293,3 +291,284 @@ body {
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+#settings-panel {
+  position: absolute;
+  top: 100%;         
+  right: 1rem;       
+  width: 180px;      
+  z-index: 1000;     
+}
+
+:root {
+  --bg-light: bisque;
+  --bg-dark:  #2c2c2c;
+  --text-light: #333;
+  --text-dark:  #eee;
+}
+
+body {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+}
+
+body.dark-mode {
+  background-color: var(--bg-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+body.dark-mode .text-dark {
+  color: var(--text-dark) !important;
+}
+
+body.dark-mode .bg-white {
+  background-color: #444 !important;
+}
+
+/* Dropdown-menu */
+body.dark-mode .dropdown-menu {
+  background-color: #444 !important;
+  color: var(--text-dark) !important;
+}
+
+/* Form-switch (toggle) */
+body.dark-mode .form-check-input {
+  background-color: #666;
+  border-color: #888;
+}
+
+body.dark-mode .form-check-input:checked {
+  background-color: #f38e21;
+  border-color: #2196F3;
+}
+body.dark-mode .form-check-label {
+  color: var(--text-dark);
+}
+
+body.dark-mode .chefs-icon {
+  filter: invert(100%) hue-rotate(180deg);
+}
+
+body {
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark mode: style Bootstrap-modal */
+body.dark-mode .modal-content {
+  background-color: var(--bg-dark) !important;  
+  color:            var(--text-dark) !important; 
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: #555 !important; 
+}
+
+body.dark-mode .modal-header .btn-close {
+  filter: invert(100%) !important; 
+}
+
+body.dark-mode .modal-body,
+body.dark-mode .modal-body p,
+body.dark-mode .modal-body li {
+  color: var(--text-dark) !important; 
+}
+
+body.dark-mode .modal-content .btn {
+  background-color: #555 !important;
+  color:            var(--text-dark) !important;
+  border-color:     #666 !important;
+}
+
+body.dark-mode #filterPanel .card {
+  background-color: var(--bg-dark) !important; 
+  border-color:     #555       !important;    
+  color:            var(--text-dark) !important;
+}
+
+/* Labels and headings */
+body.dark-mode #filterPanel .form-label {
+  color: var(--text-dark) !important;
+}
+
+/* Range sliders */
+body.dark-mode #filterPanel .form-range {
+  background-color: #555 !important;    /* track background */
+}
+
+/* Select dropdown */
+body.dark-mode #filterPanel .form-select {
+  background-color: #444 !important;
+  color:            var(--text-dark) !important;
+  border-color:     #666 !important;
+}
+
+body.dark-mode .form-range { 
+  width: 100%;
+  height: 6px;             
+  background: #555;        
+  border-radius: 3px;      
+  outline: none;           
+  margin: 0.5rem 0;        
+}
+
+body.dark-mode .form-range:focus {
+  outline: none;
+}
+
+/* WebKit-browsers (Chrome, Safari) */
+body.dark-mode .form-range::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #777;
+  border-radius: 3px;
+}
+
+/* Firefox */
+body.dark-mode .form-range::-moz-range-track {
+  height: 6px;
+  background: #777;
+  border-radius: 3px;
+}
+
+
+body.dark-mode #apply-filters-btn:hover,
+body.dark-mode .btn-primary:hover {
+  background-color: #e07b00 !important;
+  border-color:     #c76b00 !important;
+}
+
+/* —— 1) Apply-Filters-button —— */
+body.dark-mode #apply-filters-btn {
+  background-color: #f48c06 !important;
+  border-color:     #e07b00 !important;
+  color:            #fff       !important;
+}
+
+/* Chrome, Safari, Edge */
+body.dark-mode .form-range::-webkit-slider-thumb {
+  background-color: #f48c06 !important;
+}
+
+/* Firefox */
+body.dark-mode .form-range::-moz-range-thumb {
+  background-color: #f48c06 !important;
+}
+
+/* Override Bootstrap’s primary buttons */
+.btn-primary {
+  background-color: #f48c06 !important;  
+  border-color:     #e07b00 !important;  
+  color:            #fff       !important; 
+}
+
+/* Hover‐state */
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #e07b00 !important;
+  border-color:     #c76b00 !important;
+  box-shadow:       0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+.form-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #f48c06;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.form-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #f48c06;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Track */
+.form-range::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+}
+.form-range::-moz-range-track {
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+}
+
+/* Thumb */
+.form-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+          appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;         
+  background: #f48c06;      
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+.form-range::-webkit-slider-thumb:hover {
+  background: #e07b00;
+}
+
+.form-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #f48c06;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+.form-range::-moz-range-thumb:hover {
+  background: #e07b00;
+}
+
+.form-range {
+  -webkit-appearance: none;
+          appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #eee;         
+  border-radius: 3px;
+  margin: 0.5rem 0;
+  accent-color: #f48c06;    
+}
+
+/* Track for WebKit & Firefox */
+.form-range::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+}
+.form-range::-moz-range-track {
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+}
+
+/* Thumb for WebKit & Firefox */
+.form-range::-webkit-slider-thumb,
+.form-range::-moz-range-thumb {
+  -webkit-appearance: none;
+          appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;         
+  background: #f48c06;      
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+.form-range::-webkit-slider-thumb:hover,
+.form-range::-moz-range-thumb:hover {
+  background: #e07b00;     
+}
+
+
+

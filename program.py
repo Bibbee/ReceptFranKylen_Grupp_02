@@ -323,6 +323,7 @@ def get_recipes():
         email=None
     )
 
+
 @route('/register', method=['GET', 'POST'])
 def register():
     """
@@ -334,14 +335,25 @@ def register():
 
     Returns: rendered register template with status message
     """
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
+    username = None
+    if user_id:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+                row = cur.fetchone()
+                if row:
+                    username = row['username'] if isinstance(row, dict) else row[0]
+
     error = None
     success = None
 
     if request.method == 'POST':
-        username = request.forms.get('username', '').strip()
+        form_username = request.forms.get('username', '').strip()
         email = request.forms.get('email', '').strip().lower()
         password = request.forms.get('password', '')
 
+        # Validation
         if not email or '@' not in email:
             error = 'Invalid email address.'
         elif len(password) < 8:
@@ -351,7 +363,6 @@ def register():
                 password.encode('utf-8'),
                 bcrypt.gensalt()
             ).decode('utf-8')
-
             try:
                 with get_db_connection() as conn:
                     with conn.cursor() as cur:
@@ -360,7 +371,7 @@ def register():
                             INSERT INTO users (username, email, password_hash)
                             VALUES (%s, %s, %s)
                             """,
-                            (username, email, pw_hash)
+                            (form_username, email, pw_hash)
                         )
                         conn.commit()
                         success = 'Registration successful! You can now log in.'
@@ -373,7 +384,12 @@ def register():
             except Exception as exc:
                 error = f'An unexpected error occurred: {exc}'
 
-    return template('register', error=error, success=success)
+    return template(
+        'register',
+        username=username,
+        error=error,
+        success=success
+    )
 
 
 @route('/login', method='POST')
@@ -415,7 +431,6 @@ def login():
         email=email,  # skickas med till HTML
         no_results=False
     )
-
 
 
 @route('/logout')
@@ -486,7 +501,6 @@ def add_favorite():
 def show_favorites():
     """
     Display all recipes favorited by the current user.
-
     Redirects to home if not logged in.
     """
     user_id = request.get_cookie('user_id', secret=SECRET_KEY)
@@ -495,25 +509,31 @@ def show_favorites():
 
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-    """
-    SELECT
-        recipe_id,
-        title,
-        image,
-        difficulty,
-        ready_in_minutes,
-        servings,
-        nutrition,
-        instructions
-    FROM favorites
-    WHERE user_id = %s
-    """,
-    (user_id,)
-)
+            
+            cur.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+            row = cur.fetchone()
+            username = row['username'] if row else None
+
+            cur.execute("""
+                SELECT
+                    recipe_id,
+                    title,
+                    image,
+                    difficulty,
+                    ready_in_minutes,
+                    servings,
+                    nutrition,
+                    instructions
+                FROM favorites
+                WHERE user_id = %s
+            """, (user_id,))
             favorites = cur.fetchall()
 
-    return template('favorites', favorites=favorites)
+    return template('favorites',
+                    username=username,
+                    favorites=favorites)
+
+
 
 
 @route('/remove-favorite', method='POST')
