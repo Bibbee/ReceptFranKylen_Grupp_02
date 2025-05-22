@@ -124,15 +124,44 @@ body.dark-mode {
 
 body.dark-mode .text-dark       { color: var(--text-dark) !important; }
 body.dark-mode .bg-white        { background-color: #444 !important; }
-body.dark-mode .top-bar         { background-color: #333 !important; }
 body.dark-mode .dropdown-menu   { background-color: #444 !important; color: var(--text-dark) !important; }
 body.dark-mode .form-check-input {
   background-color: #666;
   border-color: #888;
 }
 body.dark-mode .form-check-input:checked {
-  background-color: #2196F3;
+  background-color: #f38e21;
   border-color: #2196F3;
 }
 body.dark-mode .form-check-label { color: var(--text-dark); }
 
+body.dark-mode .chefs-icon {
+  filter: invert(100%) hue-rotate(180deg);
+}
+
+/* Dark mode: style Bootstrap-modal */
+body.dark-mode .modal-content {
+  background-color: var(--bg-dark) !important;  
+  color:            var(--text-dark) !important; 
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: #555 !important; 
+}
+
+body.dark-mode .modal-header .btn-close {
+  filter: invert(100%) !important; 
+}
+
+body.dark-mode .modal-body,
+body.dark-mode .modal-body p,
+body.dark-mode .modal-body li {
+  color: var(--text-dark) !important; 
+}
+
+body.dark-mode .modal-content .btn {
+  background-color: #555 !important;
+  color:            var(--text-dark) !important;
+  border-color:     #666 !important;
+}
