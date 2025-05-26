@@ -169,18 +169,36 @@ def get_detailed_recipe(recipe_id):
 
 def extract_recipe_data(summary, info):
     """Build the recipe dictionary used by the frontend."""
+    # Nutrition
     nutrition = info.get('nutrition', {}).get('nutrients', [])
     kcal = next((n for n in nutrition if n['name'] == 'Calories'), None)
     kcal_str = f"{kcal['amount']} {kcal['unit']}" if kcal else 'Information missing'
 
+    # Time & difficulty
     time = info.get('readyInMinutes', 0)
     difficulty = 'Easy' if time < 30 else 'Mid' if time < 60 else 'Hard'
 
+    # Instructions
     steps = info.get('analyzedInstructions', [])
     if steps and steps[0].get('steps'):
-        instructions = "<ol>" + "".join(f"<li>{step['step']}</li>" for step in steps[0]['steps']) + "</ol>"
+        instructions = (
+            "<ol>" +
+            "".join(f"<li>{step['step']}</li>" for step in steps[0]['steps']) +
+            "</ol>"
+        )
     else:
         instructions = info.get('instructions', 'No instructions provided.')
+
+    # Ingredients list
+    raw_ings = info.get('extendedIngredients', [])
+    ingredient_list = [
+        " ".join(filter(None, [
+            str(i.get('amount', '')).strip(),
+            i.get('unit', '').strip(),
+            i.get('originalName', '').strip()
+        ])).strip()
+        for i in raw_ings
+    ]
 
     return {
         'id': summary['id'],
@@ -190,8 +208,10 @@ def extract_recipe_data(summary, info):
         'servings': info.get('servings', 'Unknown'),
         'nutrition': kcal_str,
         'difficulty': difficulty,
-        'instructions': instructions
+        'instructions': instructions,
+        'ingredients': ingredient_list
     }
+
 
 def parse_search_filters(forms):
     """
@@ -561,6 +581,83 @@ def remove_favorite():
         print(f"Error removing favorite: {exc}")
 
     return redirect('/favorites')
+
+@route('/shopping_lists')
+def show_shopping_lists():
+    user_id = get_user_id_from_cookie()
+    if not user_id:
+        return redirect('/')   # or redirect('/?login=1')
+    
+    # fetch username (if you need to show it in the header)
+    username = get_username_by_id(user_id)
+
+    # fetch the lists and their items
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, name, created_at
+                FROM shopping_lists
+                WHERE user_id = %s
+                ORDER BY created_at DESC
+            """, (user_id,))
+            lists = cur.fetchall()
+
+            for lst in lists:
+                cur.execute("""
+                    SELECT id, ingredient, is_purchased
+                    FROM shopping_list_items
+                    WHERE shopping_list_id = %s
+                """, (lst['id'],))
+                lst['items'] = cur.fetchall()
+
+    return template(
+        'shopping_lists',
+        username=username,
+        lists=lists
+    )
+
+@route('/api/shopping-lists', method='POST')
+def api_create_shopping_list():
+    user_id = get_user_id_from_cookie()
+    if not user_id:
+        return HTTPResponse(
+            status=401,
+            body=json.dumps({'error': 'Not logged in'})
+        )
+
+    payload = request.json or {}
+    name  = payload.get('name')
+    items = payload.get('items', [])
+    if not name or not isinstance(items, list):
+        return HTTPResponse(
+            status=400,
+            body=json.dumps({'error': 'Invalid payload'})
+        )
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # 1) create the list
+                cur.execute(
+                    "INSERT INTO shopping_lists (user_id, name) VALUES (%s, %s) RETURNING id",
+                    (user_id, name)
+                )
+                list_id = cur.fetchone()['id']
+                # 2) insert each item
+                args = [(list_id, ing) for ing in items]
+                cur.executemany(
+                    "INSERT INTO shopping_list_items (shopping_list_id, ingredient) VALUES (%s, %s)",
+                    args
+                )
+            conn.commit()
+
+        response.content_type = 'application/json'
+        return json.dumps({'ok': True, 'id': list_id})
+    except Exception as e:
+        return HTTPResponse(
+            status=500,
+            body=json.dumps({'error': str(e)})
+        )
 
 
 @route('/static/<filepath:path>')

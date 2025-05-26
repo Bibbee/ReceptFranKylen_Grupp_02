@@ -58,6 +58,7 @@
       </a>
       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
         % if username:
+          <li><a class="dropdown-item" href="/shopping_lists">Shopping Lists</a></li>
           <li><a class="dropdown-item" href="/logout">Log out</a></li>
         % else:
           <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a></li>
@@ -241,12 +242,15 @@
                   data-nutrition="{{ (recipe.get('nutrition') or 'Information missing').replace('"', '&quot;') }}"
                   data-instructions="{{ (recipe.get('instructions') or 'No instructions provided.').replace('\n', ' ').replace('"', '&quot;') }}"
                 >⭐</button>
-                <!-- Link to full recipe on Spoonacular -->
-                <a
-                  href="https://spoonacular.com/recipes/{{recipe['title'].replace(' ', '-')}}-{{recipe['id']}}"
-                  target="_blank"
-                  class="btn btn-warning flex-fill"
-                >View recipe</a>
+                % import json
+                <button
+                  class="btn btn-warning view-ingredients-btn"
+                  data-title="{{ recipe['title'] }}"
+                  data-ingredients='{{ json.dumps(recipe["ingredients"]) }}'
+                  data-bs-toggle="modal"
+                  data-bs-target="#ingredientsModal">
+                  View ingredients
+                </button>
               </div>
             </div>
           </div>
@@ -254,6 +258,26 @@
       % end
     </section>
     % end
+    <!-- Ingredients Modal -->
+    <div class="modal fade" id="ingredientsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="ingredientsModalLabel"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p id="ingredients-count" class="fw-bold"></p>
+            <ul id="ingredients-list" class="list-group"></ul>
+          </div>
+          <div class="modal-footer">
+            <button id="generate-shopping-list-btn" class="btn btn-primary">
+              Generate shopping list
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </main>
 
@@ -335,6 +359,7 @@
   <script src="/static/js/settings.js"></script>
   <script src="/static/js/RecipeModal.js"></script>
   <script src="/static/js/filters.js"></script>
+  <script src="/static/js/ingredients.js"></script>
   <script>
     // Auto-show login modal if login_error exists
     window.addEventListener('DOMContentLoaded', () => {
