@@ -487,6 +487,9 @@ def add_favorite():
     servings = request.forms.get('servings')
     nutrition = request.forms.get('nutrition')
     instructions = request.forms.get('instructions')
+    ingredients_json = request.forms.get('ingredients') or '[]'
+
+
 
     try:
         with get_db_connection() as conn:
@@ -495,14 +498,14 @@ def add_favorite():
                     """
                     INSERT INTO favorites (
                         user_id, recipe_id, title, image, difficulty,
-                        ready_in_minutes, servings, nutrition, instructions
+                        ready_in_minutes, servings, nutrition, instructions, ingredients
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT DO NOTHING
                     """,
                     (
                         user_id, recipe_id, title, image, difficulty,
-                        ready_in_minutes, servings, nutrition, instructions
+                        ready_in_minutes, servings, nutrition, instructions, ingredients_json
                     )
                 )
 
@@ -543,11 +546,18 @@ def show_favorites():
                     ready_in_minutes,
                     servings,
                     nutrition,
-                    instructions
+                    instructions,
+                    ingredients
                 FROM favorites
                 WHERE user_id = %s
             """, (user_id,))
             favorites = cur.fetchall()
+
+            for fav in favorites:
+                try:
+                    fav['ingredients'] = json.loads(fav['ingredients'])
+                except Exception:
+                    fav['ingredients'] = []
 
     return template('favorites',
                     username=username,
@@ -657,6 +667,45 @@ def api_create_shopping_list():
         return HTTPResponse(
             status=500,
             body=json.dumps({'error': str(e)})
+        )
+
+@route('/api/shopping-lists/<list_id:int>', method='DELETE')
+def delete_shopping_list(list_id):
+    """
+    Remove a shopping list and all of its items for the current user.
+    """
+    user_id = get_user_id_from_cookie()
+    if not user_id:
+        # 401 so the JS can show "please login"
+        return HTTPResponse(
+            status=401,
+            body=json.dumps({'ok': False, 'error': 'Not logged in'})
+        )
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # first delete the items
+                cur.execute(
+                  "DELETE FROM shopping_list_items WHERE shopping_list_id = %s",
+                  (list_id,)
+                )
+                # then the list itself, but make sure it belongs to this user
+                cur.execute(
+                  "DELETE FROM shopping_lists WHERE id = %s AND user_id = %s",
+                  (list_id, user_id)
+                )
+                conn.commit()
+
+                # if nothing was deleted, return 404
+                if cur.rowcount == 0:
+                    return HTTPResponse(status=404, body=json.dumps({'ok': False}))
+        
+        return {'ok': True}
+    except Exception as exc:
+        return HTTPResponse(
+            status=500,
+            body=json.dumps({'ok': False, 'error': str(exc)})
         )
 
 

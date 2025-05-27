@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const servings = button.dataset.servings || 'Unknown';
       const nutrition = button.dataset.nutrition || 'Information missing';
       const instructions = button.dataset.instructions || 'No instructions available.';
+      const ingredients  = button.dataset.ingredients;
 
       const formData = new FormData();
       formData.append('recipe_id', recipeId);
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('servings', servings);
       formData.append('nutrition', nutrition);
       formData.append('instructions', instructions);
+      formData.append('ingredients', ingredients);
 
       try {
         const res = await fetch('/favorite', {

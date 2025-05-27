@@ -78,7 +78,8 @@ body {
 }
 
 /* TRASH BUTTON */
-.trash-button {
+.trash-button 
+.ingredients-btn{
   background: transparent;
   border: none;
   outline: none;
@@ -94,6 +95,15 @@ body {
 }
 
 .trash-button:focus {
+  outline: none;
+}
+
+.ingredients-btn:hover {
+  transform: scale(1.2);
+  color: #c0392b;
+}
+
+.ingredients-btn:focus {
   outline: none;
 }
 
@@ -164,4 +174,10 @@ body.dark-mode .modal-content .btn {
   background-color: #555 !important;
   color:            var(--text-dark) !important;
   border-color:     #666 !important;
+}
+
+.ingredients-btn img {
+  width: 1.4rem;
+  height: 1.4rem;  /* keep square */
+  object-fit: contain;
 }
