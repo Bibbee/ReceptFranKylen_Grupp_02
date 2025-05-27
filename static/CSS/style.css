@@ -148,7 +148,8 @@ body {
 
 /* BUTTONS */
 .favorite-star,
-.trash-button {
+.trash-button,
+.ingredients-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -164,6 +165,12 @@ body {
 .trash-button:hover {
   transform: scale(1.2);
   color: #c0392b;
+}
+
+.ingredients-btn img {
+  width: 1.4rem;
+  height: 1.4rem;  /* keep square */
+  object-fit: contain;
 }
 
 .no-results-message {
@@ -290,6 +297,11 @@ body {
   background-color: #c45b00;
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.shopping-list-card {
+  width: 100%;
+  max-width: 600px;
 }
 
 #settings-panel {

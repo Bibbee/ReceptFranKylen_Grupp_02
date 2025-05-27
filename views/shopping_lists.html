@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReceptFrånKylen</title>
+
+  <script src="/static/js/settings.js"></script>
+
+  <!-- Third-party CSS: Bootstrap & FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Third-party JS: Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100 p-4">
+  
+<header class="top-bar d-flex justify-content-between align-items-center py-3 position-relative">
+  <!-- Home-icon -->
+  <a href="/" class="home-icon">
+    <img src="/static/images/chef-logo.png" alt="Home page logo" class="chefs-icon">
+  </a>
+
+  <div class="d-flex align-items-center gap-4">
+    <a href="/favorites" class="text-dark fs-4" title="Favorites">
+      <i class="fas fa-star"></i>
+    </a>
+
+    <a href="javascript:void(0)"
+       id="settingsTrigger"
+       class="text-dark fs-4"
+       title="Settings">
+      <i class="fas fa-cog"></i>
+    </a>
+
+    <!-- Profile-dropdown -->
+    <div class="dropdown">
+      <a href="#"
+         class="text-dark fs-4"
+         id="profileDropdown"
+         data-bs-toggle="dropdown"
+         aria-expanded="false"
+         title="Profile">
+        <i class="fas fa-user"></i>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+        % if username:
+          <li><a class="dropdown-item" href="/shopping_lists">Shopping Lists</a></li>
+          <li><a class="dropdown-item" href="/logout">Log out</a></li>
+        % else:
+          <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a></li>
+          <li><a class="dropdown-item" href="/register">Register</a></li>
+        % end
+      </ul>
+    </div>
+  </div>
+
+  <!-- Hidden settings for toggle option -->
+  <div id="settings-panel"
+       class="d-none position-absolute bg-white border rounded shadow-sm p-3"
+       style="top: 100%; right: 1rem; width: 180px; z-index: 1000;">
+    <div class="form-check form-switch mb-0">
+      <input class="form-check-input" type="checkbox" id="darkModeToggle">
+      <label class="form-check-label" for="darkModeToggle">☀️/🌙 Mode</label>
+    </div>
+  </div>
+</header>
+
+  <!-- MAIN CONTENT: includes headline, search, filters, and recipe results -->
+  <main class="center-wrapper container flex-fill d-flex flex-column justify-content-start text-center">
+
+    <!-- Headline section -->
+    <section class="headline mb-4">
+      <h1>ReceptFrånKylen</h1>
+      <p>Turn fridge leftovers into tasty masterpieces!</p>
+    </section>
+
+  <h1 class="mb-4">Shopping Lists for {{username}}</h1>
+  % if lists:
+  <div class="row justify-content-center">
+    % for lst in lists:
+      <div id="shopping-list-{{ lst['id'] }}"
+           class="col-12 mb-3 d-flex justify-content-center">
+        <div class="card h-100 shopping-list-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>{{ lst['name'] }}</strong>
+            <div class="d-flex align-items-center">
+              <small class="text-muted me-2">
+                {{ lst['created_at'].strftime('%Y-%m-%d') }}
+              </small>
+              <button type="button"
+                      class="btn-close delete-list-btn"
+                      aria-label="Delete"
+                      data-list-id="{{ lst['id'] }}">
+              </button>
+            </div>
+          </div>
+          <ul class="list-group list-group-flush">
+            % for item in lst['items']:
+              <li class="list-group-item">
+                <span class="{{ 'text-decoration-line-through' if item['is_purchased'] else '' }}">
+                  {{ item['ingredient'] }}
+                </span>
+              </li>
+            % end
+          </ul>
+        </div>
+      </div>
+    % end
+  </div>
+% else:
+  <div class="alert alert-info text-center">
+    You have no shopping lists yet.
+  </div>
+% end
+
+  <a href="/" class="btn btn-secondary">Back to homepage</a>
+  <script>
+    document.querySelectorAll('.delete-list-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const listId = btn.dataset.listId;
+        if (!confirm('Are you sure you want to delete this shopping list?')) return;
+  
+        const resp = await fetch(`/api/shopping-lists/${listId}`, {
+          method: 'DELETE',
+        });
+  
+        if (resp.ok) {
+          // remove the entire card container
+          const card = document.getElementById(`shopping-list-${listId}`);
+          if (card) card.remove();
+        } else if (resp.status === 401) {
+          alert('You must be logged in to delete a list.');
+        } else {
+          alert('Could not delete list.');
+        }
+      });
+    });
+  </script>
+  
+  
+</body>
+</html>
