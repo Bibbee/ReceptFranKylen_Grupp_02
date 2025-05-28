@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Page title: Application name -->
+  <title>ReceptFrånKylen</title>
+
+  <!-- Load project settings -->
+  <script src="/static/js/settings.js"></script>
+
+  <!-- Third-party CSS: Bootstrap & FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Third-party JS: Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100 p-4">
+  <!-- HEADER: Top navigation with logo, favorites, settings, and profile -->
+  <header class="top-bar d-flex justify-content-between align-items-center py-3 position-relative">
+    <!-- Home icon linking to the homepage -->
+    <a href="/" class="home-icon" title="Home">
+      <img src="/static/images/chef-logo.png" alt="Home page logo" class="chefs-icon">
+    </a>
+
+    <div class="d-flex align-items-center gap-4">
+      <!-- Favorites icon -->
+      <a href="/favorites" class="text-dark fs-4" title="Favorites">
+        <i class="fas fa-star"></i>
+      </a>
+
+      <!-- Settings icon toggles dark/light mode panel -->
+      <a href="javascript:void(0)"
+         id="settingsTrigger"
+         class="text-dark fs-4"
+         title="Settings">
+        <i class="fas fa-cog"></i>
+      </a>
+
+      <!-- Profile dropdown -->
+      <div class="dropdown">
+        <a href="#"
+           class="text-dark fs-4"
+           id="profileDropdown"
+           data-bs-toggle="dropdown"
+           aria-expanded="false"
+           title="Profile">
+          <i class="fas fa-user"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+          % if username:
+            <li><a class="dropdown-item" href="/shopping_lists">Shopping Lists</a></li>
+            <li><a class="dropdown-item" href="/logout">Log out</a></li>
+          % else:
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a></li>
+            <li><a class="dropdown-item" href="/register">Register</a></li>
+          % end
+        </ul>
+      </div>
+    </div>
+
+    <!-- Hidden panel for dark/light mode toggle -->
+    <div id="settings-panel"
+         class="d-none position-absolute bg-white border rounded shadow-sm p-3"
+         style="top: 100%; right: 1rem; width: 180px; z-index: 1000;">
+      <div class="form-check form-switch mb-0">
+        <input class="form-check-input" type="checkbox" id="darkModeToggle">
+        <label class="form-check-label" for="darkModeToggle">☀️/🌙 Mode</label>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT: headline and weekly planning section -->
+  <main class="center-wrapper container flex-fill d-flex flex-column justify-content-start text-center">
+
+    <!-- SECTION: Brand headline with link back to homepage -->
+    <section class="headline mb-4">
+      <h1>
+        <a href="/" class="text-decoration-none text-dark">
+          ReceptFrånKylen
+        </a>
+      </h1>
+      <p>Turn fridge leftovers into tasty masterpieces!</p>
+    </section>
+
+    <!-- SECTION: Weekly plan container -->
+    <div class="container mt-5">
+      <h1 class="text-center mb-4">Your Weekly Plan</h1>
+      <!-- Button to clear the entire week's plan -->
+      <div class="d-flex justify-content-center mb-3">
+        <button class="btn btn-danger" onclick="clearWeekPlan()">Clear the Week</button>
+      </div>
+      <div class="row gx-4 gy-4" id="weekPlanContainer">
+        <!-- Recipe cards for each day will be injected here -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Load custom JavaScript for meal planner functionality -->
+  <script src="/static/JS/mealplanner.js"></script>
+</body>
+</html>

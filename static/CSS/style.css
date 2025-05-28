@@ -304,6 +304,27 @@ body {
   max-width: 600px;
 }
 
+.day-box {
+  background-color: #ffffff;
+  color: #000000; /* <-- GÖR texten svart */
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem;
+  min-height: 160px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: left;
+  transition: transform 0.2s ease-in-out;
+}
+.day-box:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+.day-box em {
+  color: #666; /* valfritt: gör “Inget planerat” lite dämpad */
+}
+
+
+
 #settings-panel {
   position: absolute;
   top: 100%;         
