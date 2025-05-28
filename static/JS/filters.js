@@ -32,6 +32,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize Bootstrap Collapse for filter panel
   const bsCollapse = new bootstrap.Collapse(filterPanelEl, { toggle: false });
 
+  // Add click-outside handler to close the filter panel
+  document.addEventListener("click", (e) => {
+    // if panel is open and click is neither inside panel nor on the apply button → hide
+    if (
+      filterPanelEl.classList.contains("show") &&
+      !filterPanelEl.contains(e.target) &&
+      !applyBtn.contains(e.target)
+    ) {
+      bsCollapse.hide();
+    }
+  });
+
   // Add close button to top-right of panel
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
