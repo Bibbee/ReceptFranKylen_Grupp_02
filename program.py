@@ -708,6 +708,16 @@ def delete_shopping_list(list_id):
             body=json.dumps({'ok': False, 'error': str(exc)})
         )
 
+@route('/meal_planner')
+def meal_planner():
+    """
+    Render the weekly meal planner page (data loaded from localStorage).
+    """
+    user_id = get_user_id_from_cookie()
+    username = get_username_by_id(user_id) if user_id else None
+
+    return template('meal_planner', username=username)
+
 
 @route('/static/<filepath:path>')
 def serve_static(filepath):
