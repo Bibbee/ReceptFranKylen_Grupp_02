@@ -120,9 +120,20 @@
           </div>
         </div>
       </div>
-      <button type="submit" class="btn btn-warning find-recipe-btn">
-        Find recipe
-      </button>
+      <button
+      type="submit"
+      class="btn btn-warning find-recipe-btn"
+      id="searchBtn"
+    >
+      Find recipe
+      <span
+        id="loadingSpinner"
+        class="spinner-border spinner-border-sm text-light ms-2 d-none"
+        role="status"
+        aria-hidden="true"
+      ></span>
+    </button>
+    
     </div>
 
     <!-- 2) FILTER BUTTON + DIET TAGS -->
@@ -414,6 +425,7 @@
       }
     });
   </script>
+  <script src="/static/js/loading.js"></script>
 
 </body>
 </html>
