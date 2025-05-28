@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // -----------------------------------
   document.querySelectorAll('.favorite-star').forEach(button => {
     button.addEventListener('click', async () => {
+      event.preventDefault();
       // Collect recipe data
       const recipeData = {
         recipe_id:        button.dataset.recipeId,
@@ -100,7 +101,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // If logged in, send immediately and then redirect
       await sendFavorite(formData);
-      window.location.href = '/favorites';
     });
   });
 });
