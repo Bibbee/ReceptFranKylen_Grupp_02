@@ -411,6 +411,69 @@ def register():
         success=success
     )
 
+@route('/settings', method=['GET', 'POST'])
+def user_settings():
+    # Retrieve the logged-in user's ID from the session cookie
+    user_id = get_user_id_from_cookie()
+    if not user_id:
+        return redirect('/')
+
+    error = None
+    success = None
+
+    # Fetch current username and password hash from the database
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT username, password_hash FROM users WHERE id = %s", (user_id,))
+            row = cur.fetchone()
+    current_username = row['username']
+    current_hash     = row['password_hash']
+
+    if request.method == 'POST':
+        new_username     = request.forms.get('username', '').strip()
+        current_password = request.forms.get('current_password', '')
+        new_password     = request.forms.get('new_password', '')
+        confirm_password = request.forms.get('confirm_password', '')
+
+        # 1) Verify that the provided current password is correct
+        if not bcrypt.checkpw(current_password.encode(), current_hash.encode()):
+            error = 'Incorrect current password.'
+        # 2) If a new password was entered, validate it
+        elif new_password:
+            if new_password != confirm_password:
+                error = 'New password and confirmation do not match.'
+            elif len(new_password) < 8:
+                error = 'New password must be at least 8 characters long.'
+        # 3) If the username has changed, ensure it's not already taken
+        if not error and new_username != current_username:
+            with get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT id FROM users WHERE username = %s", (new_username,))
+                    if cur.fetchone():
+                        error = 'Username is already taken.'
+
+        # 4) If no errors, update the database
+        if not error:
+            with get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    # Update username
+                    cur.execute("UPDATE users SET username = %s WHERE id = %s",
+                                (new_username, user_id))
+                    # If a new password was provided, hash and update it
+                    if new_password:
+                        new_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+                        cur.execute("UPDATE users SET password_hash = %s WHERE id = %s",
+                                    (new_hash, user_id))
+                conn.commit()
+            success = 'Your account settings have been updated.'
+            current_username = new_username
+
+    # Render the settings template, passing in any messages and current username
+    return template('settings',
+                    username=current_username,
+                    error=error,
+                    success=success)
+
 
 @route('/login', method='POST')
 def login():
