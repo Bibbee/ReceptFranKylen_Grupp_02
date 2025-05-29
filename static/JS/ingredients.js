@@ -127,3 +127,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form    = document.getElementById('searchForm');
+  const input   = document.getElementById('ingredients-input');
+  const spinner = document.getElementById('loadingSpinner');
+
+  form.addEventListener('submit', (e) => {
+    // 1) Read the raw text from the input
+    const raw = input.value;
+
+    // 2) Split on one or more spaces or commas, trim out empty entries
+    //  "tomato basil, garlic" → ["tomato","basil","garlic"]
+    const ingredients = raw
+      .trim()
+      .split(/[\s,]+/)
+      .filter(Boolean);
+
+    // 3) Rebuild as a comma-separated string so the backend receives "a,b,c"
+    input.value = ingredients.join(',');
+    
+  });
+});
