@@ -257,7 +257,10 @@
             <h5 class="card-title">{{recipe['title']}}</h5>
             <div class="d-flex justify-content-between align-items-center gap-2 mt-auto">
               <!-- Favorite button: triggers AJAX POST to /favorite endpoint -->
-              <button class="favorite-star"
+              <button 
+                class="favorite-star"
+                title = "Favorites"
+                data-bs-toggle="tooltip"
                 data-recipe-id="{{recipe['id']}}"
                 data-title="{{recipe['title']}}"
                 data-image="{{recipe['image']}}"
@@ -272,12 +275,16 @@
               <!-- Meal planner button: opens planning modal for selected recipe -->
               <button
                 class="btn btn-light meal-plan-btn"
+                data-bs-toggle="tooltip"
+                Title = "Mealplanner"
                 data-title="{{ recipe['title'] }}">
                 <i class="fas fa-calendar-alt"></i>
               </button>
               <!-- Ingredients button: opens modal listing required ingredients -->
               <button
                 class="ingredients-btn"
+                data-bs-toggle="tooltip"
+                title = "Ingredients"
                 data-title="{{ recipe['title'] }}"
                 data-ingredients='{{ json.dumps(recipe["ingredients"]) }}'
                 data-bs-toggle="modal"
@@ -464,7 +471,12 @@
       }
     });
   </script>
+
+  <!-- Loading spinner-script -->
   <script src="/static/js/loading.js"></script>
+
+<!-- Initialize Bootstrap tooltips immediately without delay -->
+<script src="/static/js/tooltips.js"></script>
 
 </body>
 </html>
