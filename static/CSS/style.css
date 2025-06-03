@@ -603,5 +603,56 @@ body.dark-mode .form-range::-moz-range-thumb {
   background: #e07b00;     
 }
 
+#ingredients-input {
+  background-color: #f1f1f1;
+  border-radius: 8px;
+  padding: 10px 15px;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  font-size: 1rem;
+}
 
+.meal-plan-btn,
+.ingredients-btn {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 50%;
+  padding: 0.25rem;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
 
+.meal-plan-btn i {
+  font-size: 1.5rem;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  display: inline-block;
+  text-align: center;
+  transition: transform 0.2s ease, filter 0.2s ease, color 0.2s ease;
+}
+
+.ingredients-btn img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: inline-block;
+  filter: brightness(0) !important;
+  transition: transform 0.2s ease, filter 0.2s ease, color 0.2s ease;
+}
+
+.meal-plan-btn:hover,
+.ingredients-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.meal-plan-btn:hover i {
+  color: #000 !important;
+  transform: scale(1.2);
+}
+
+.ingredients-btn:hover img {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
+}
