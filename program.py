@@ -146,6 +146,7 @@ def fetch_recipes_from_api(ingredients, diet, max_calories=None, max_ready_time=
 
 def is_recipe_valid(info, diet):
     """Determine if a recipe matches the selected diet."""
+    
     title = info.get('title', '').lower()
     ingredients = [i['name'].lower() for i in info.get('extendedIngredients', [])]
 
