@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Attach submit handler to the form
     form.addEventListener('submit', () => {
-      // Visa spinner och inaktivera knapp
-      spinner.classList.remove('d-none');
+// Show spinner and disable button
+spinner.classList.remove('d-none');
       button.disabled = true;
     });
   });

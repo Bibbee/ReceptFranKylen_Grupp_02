@@ -8,13 +8,13 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
-    // Hitta alla element som har data-bs-toggle="tooltip"
-    const tooltipTriggerList = [].slice.call(
+// Find all elements that have data-bs-toggle="tooltip"
+const tooltipTriggerList = [].slice.call(
       document.querySelectorAll('[data-bs-toggle="tooltip"]')
     );
     tooltipTriggerList.forEach(function (tooltipTriggerEl) {
       new bootstrap.Tooltip(tooltipTriggerEl, {
-        delay: { show: 0, hide: 100 },  // Visa direkt, göm efter 100 ms
+        delay: { show: 0, hide: 100 },  // Show immediately, hide after 100 ms
         boundary: "window"
       });
     });
